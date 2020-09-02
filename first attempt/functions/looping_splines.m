@@ -1,4 +1,4 @@
-function [pos,vel, acc, period] = looping_splines(positions,times)
+function [pos,vel, acc] = looping_splines(positions,times)
 %SPLINES Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,6 +30,6 @@ tmp_vel = @(x) ppval(pp_vel, (x+times(len)));
 vel = @(x) tmp_vel(mod(x, times(len)));
 tmp_acc = @(x) ppval(pp_acc, (x+times(len)));
 acc = @(x) tmp_acc(mod(x, times(len)));
-period = times(len);
+
 end
 
