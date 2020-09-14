@@ -1,4 +1,4 @@
-function [pos,vel, acc] = generate_exciting_traj(i)
+function [pos,vel, acc] = generate_exciting_traj()
 %GENERATE_EXCITING_TRAJ Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -35,12 +35,12 @@ acc_tmp(t) = diff(vel_tmp, t);
 acc = @(t) double(acc_tmp(t));
 
 time = 0:0.02:((2*pi)/w);
-save('time'+i+'.mat', 'time');
+save('time.mat', 'time');
 position = double(pos(time));
-save('pos'+i+'.mat', 'position');
+save('pos.mat', 'position');
 velocity = double(vel(time));
-save('vel'+i+'.mat', 'velocity');
+save('vel.mat', 'velocity');
 acceleration = double(acc(time));
-save('acc'+i+'.mat', 'acceleration');
+save('acc.mat', 'acceleration');
 
 end
