@@ -2,7 +2,13 @@ function [a] = dinamic_coefficients(m1, rc1x, rc1y, rc1z, I1yy, m2, rc2x, rc2y, 
 %DINAMIC_COEFFICIENTS Summary of this function goes here
 %   Detailed explanation goes here
 
-syms g0 b c d d2 L2 L3
+g0 = 9.81;
+b = rc2x;
+c = rc2z;
+d = rc3x;
+d2 = 0.09;
+L2 = 0.3;
+L3 = 0.2;
 
 a1= I1yy + m2*(c+ d2)^2 + m3 * d2^2;
 a2 = m2*(L2 -b)^2 + m3 * L2^2 + I2yy;
