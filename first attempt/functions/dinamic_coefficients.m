@@ -3,10 +3,10 @@ function [a] = dinamic_coefficients(m1, rc1x, rc1y, rc1z, I1yy, m2, rc2x, rc2y, 
 %   Detailed explanation goes here
 
 g0 = 9.81;
-b = rc2x;
-c = rc2z;
-d = rc3x;
-d2 = 0.09;
+b = -rc2x;
+c = -rc2z;
+d = -rc3x;
+d2 = -0.09;
 L2 = 0.3;
 L3 = 0.2;
 
