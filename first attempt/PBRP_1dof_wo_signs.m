@@ -33,16 +33,45 @@ num_of_joints = 1; % DoFs of the Franka Emika Panda robot
 %  with the inertia tensors expressed w.r.t. link CoMs
 
 % total samples retrieved during exciting trajectories
-load('data/1-dof/experiment1/Y_1dof.mat', 'Y_1dof')
-load('data/1-dof/experiment1/u_1dof.mat', 'u_1dof')
+load('data/1-dof/experiment5/Y_1dof.mat', 'Y_1dof')
+load('data/1-dof/experiment5/u_1dof.mat', 'u_1dof')
+u_1dof_abs = abs(u_1dof);
 
-num_of_samples = size(Y_1dof,1)/num_of_joints; 
+num_of_samples = size(Y_1dof,1)/num_of_joints;
+
 
 % ---------------------------
 % read lower and upper bounds
 % ---------------------------
 
 [LB,UB] = read_bounds('data/1-dof/bounds/bound_1dof.csv');
+
+indices = change_of_sign(u_1dof_abs, 20);
+indices_long = []
+for i=1:size(indices, 1)
+    if indices(i, 2)-indices(i, 1)>=20
+        indices_long = [indices_long; indices(i, :)]
+    end
+end
+indices = indices_long;
+
+signs = []
+
+for i=1:size(indices, 1)
+    [sign, positive_optimal_solution, negative_optimal_solution] = choose_sign_1dof(Y_1dof(indices(i, 1):indices(i, 2), :), u_1dof_abs(indices(i, 1):indices(i, 2)), LB, UB);
+    signs = [signs, sign];
+    disp(sign)
+    disp(positive_optimal_solution)
+    disp(negative_optimal_solution)
+end
+
+u_estimated_sign = [];
+Y_estimated = [];
+
+for i=1:length(signs)
+    u_estimated_sign = [u_estimated_sign; signs(i) * u_1dof_abs(indices(i, 1):indices(i, 2))];
+    Y_estimated = [Y_estimated; Y_1dof(indices(i, 1):indices(i, 2), :)];
+end
 
 %----------------------------------
 % initializations
@@ -78,7 +107,7 @@ for i=1:num_of_runs
         
         options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
 
-        [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y_1dof, u_1dof),X0,LB,UB,options);
+        [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y_estimated, u_estimated_sign),X0,LB,UB,options);
 
         X0 = X;
     %end
@@ -95,6 +124,7 @@ end
 % retrieve optimal solution
 min_idx = find(LOSSES==min(LOSSES));
 optimal_solution = SOL(:,min_idx);
+
 
 %----------------------------------
 % Self-validation
@@ -125,7 +155,7 @@ end
 figure
 samples = 1:num_of_samples;
 for i=1:num_of_joints
-    subplot(4,2,i);
+    subplot(1,1,i);
     plot(samples,TAU_TRUE(i,:),samples,TAU_ESTD(i,:));
     grid;
     xlabel('samples [#]');

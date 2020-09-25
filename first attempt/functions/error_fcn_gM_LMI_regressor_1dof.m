@@ -10,7 +10,7 @@
 %
 % the following code has been tested on Matlab 2018b
 
-function [loss] = error_fcn_gM_LMI_regressor_1dof(x)
+function [loss] = error_fcn_gM_LMI_regressor_1dof(x, Y_1dof, u_1dof)
 
 % global SA_step
 % 
@@ -25,10 +25,6 @@ d = x(2);
 I = x(3);
 
 P_li_expanded_eval = get_1dof_coefficients(m, d, I);
-
-global experiment_path;
-load(fullfile(experiment_path,'Y_1dof.mat'), 'Y_1dof')
-load(fullfile(experiment_path,'u_1dof.mat'), 'u_1dof')
 
 % compute error vector, as the difference of current dynamic coeff values
 % and previously estimated dyn coeff values, as follows:
