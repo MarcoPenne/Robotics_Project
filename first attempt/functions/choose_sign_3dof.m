@@ -55,7 +55,7 @@ end
 % retrieve optimal solution
 min_idx = find(LOSSES==min(LOSSES));
 positive_optimal_solution = SOL(:,min_idx);
-positive_loss = LOSSES(min_idx);
+positive_loss = min(LOSSES);
 
 u = -u;
 
@@ -100,7 +100,7 @@ end
 % retrieve optimal solution
 min_idx = find(LOSSES==min(LOSSES));
 negative_optimal_solution = SOL(:,min_idx);
-negative_loss = LOSSES(min_idx);
+negative_loss = min(LOSSES);
 
 if positive_loss <= negative_loss
     sign = +1;
