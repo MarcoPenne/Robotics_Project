@@ -1,4 +1,4 @@
-function [pos,vel, acc] = generate_exciting_traj()
+function [pos,vel, acc] = generate_exciting_traj(init_point)
 %GENERATE_EXCITING_TRAJ Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -29,6 +29,7 @@ end
 extrema = vpa(sol, 6);
 maximum = max(abs(pos(extrema)));
 pos = @(t) pos(t)*limit/maximum;
+pos = @(t) pos(t) + init_point;
 vel_tmp(t) = diff(pos, t);
 vel = @(t) double(vel_tmp(t));
 acc_tmp(t) = diff(vel_tmp, t);
