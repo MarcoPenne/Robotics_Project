@@ -1,7 +1,7 @@
 clear all
 clc
 
-syms q1 q2 q3 L1 L2 L3 d2 dq1 dq2 dq3 a b c d m1 m2 m3 I1xx I2xx I3xx I1yy I2yy I3yy I1zz I2zz I3zz g0 ddq1 ddq2 ddq3 real
+syms q1 q2 q3 L1 L2 L3 d2 dq1 dq2 dq3 a b c d m1 m2 m3 J1xx J2xx J3xx J1yy J2yy J3yy J1zz J2zz J3zz g0 ddq1 ddq2 ddq3 real
 
 q = [q1;q2;q3];
 dq = [dq1;dq2;dq3];
@@ -10,9 +10,9 @@ rc1 = [0;-a;0];
 rc2 = [-b;0;-c];
 rc3 = [-d;0;0];
 
-Ic1 = [I1xx 0 0; 0 I1yy 0; 0 0 I1zz];
-Ic2 = [I2xx 0 0; 0 I2yy 0; 0 0 I2zz];
-Ic3 = [I3xx 0 0; 0 I3yy 0; 0 0 I3zz];
+Jc1 = [J1xx 0 0; 0 J1yy 0; 0 0 J1zz];
+Jc2 = [J2xx 0 0; 0 J2yy 0; 0 0 J2zz];
+Jc3 = [J3xx 0 0; 0 J3yy 0; 0 0 J3zz];
 
 % Direct kinematics
 
@@ -86,9 +86,9 @@ vc3 = simplify(v33+cross(w33,rc3));
 
 % Kinetic energies
 
-T1 = simplify((1/2)*m1*(norm(vc1))^2+(1/2)*w11'*Ic1*w11);
-T2 = simplify((1/2)*m2*(norm(vc2))^2+(1/2)*w22'*Ic2*w22);
-T3 = simplify((1/2)*m3*(norm(vc3))^2+(1/2)*w33'*Ic3*w33);
+T1 = simplify((1/2)*m1*(norm(vc1))^2+(1/2)*w11'*Jc1*w11);
+T2 = simplify((1/2)*m2*(norm(vc2))^2+(1/2)*w22'*Jc2*w22);
+T3 = simplify((1/2)*m3*(norm(vc3))^2+(1/2)*w33'*Jc3*w33);
 
 T = simplify(T1+T2+T3)
 
