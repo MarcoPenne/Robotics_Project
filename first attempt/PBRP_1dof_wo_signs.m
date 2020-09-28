@@ -33,8 +33,8 @@ num_of_joints = 1; % DoFs of the Franka Emika Panda robot
 %  with the inertia tensors expressed w.r.t. link CoMs
 
 % total samples retrieved during exciting trajectories
-load('data/1-dof/experiment9/Y_1dof.mat', 'Y_1dof')
-load('data/1-dof/experiment9/u_1dof.mat', 'u_1dof')
+load('data/1-dof/experiment10/Y_1dof.mat', 'Y_1dof')
+load('data/1-dof/experiment10/u_1dof.mat', 'u_1dof')
 u_1dof_abs = abs(u_1dof);
 
 num_of_samples = size(Y_1dof,1)/num_of_joints;
@@ -170,9 +170,9 @@ ground_coefficients = get_1dof_coefficients(5,0.5,5*(8.417e-02));
 
 a_1dof = pinv(Y_1dof)*u_1dof
 
-disp('The estimated dynamic coefficients are:')
+disp('The estimated dynamic coefficients w/o torque signs are:')
 disp(estimated_coefficients)
 disp('The ground values of the dynamic coefficients are:')
 disp(ground_coefficients)
-disp('The dynamic coefficients considering torque signs are:')
+disp('The estimated dynamic coefficients with torque signs are:')
 disp(a_1dof)
