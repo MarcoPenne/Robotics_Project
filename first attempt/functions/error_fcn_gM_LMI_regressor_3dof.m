@@ -38,7 +38,7 @@ I3xx = x(17);
 I3yy = x(18);
 I3zz = x(19);
 
-P_li_expanded_eval = dinamic_coefficients(m1,rc1x,rc1y,rc1z,I1yy,m2,rc2x,rc2y,rc2z,I2xx,I2yy,I2zz,m3,rc3x,rc3y,rc3z,I3xx,I3yy,I3zz);
+P_li_expanded_eval = get_3dof_coefficients(m1,rc1x,rc1y,rc1z,I1yy,m2,rc2x,rc2y,rc2z,I2xx,I2yy,I2zz,m3,rc3x,rc3y,rc3z,I3xx,I3yy,I3zz);
 
 % compute error vector, as the difference of current dynamic coeff values
 % and previously estimated dyn coeff values, as follows:
