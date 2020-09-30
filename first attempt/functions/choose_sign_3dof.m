@@ -31,20 +31,20 @@ EXITFLAGS = zeros(num_of_runs,1);
 
 for i=1:num_of_runs
     for SA_step=1:num_of_SA_steps
-        stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
-        disp(stringtodisp);
+        %stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
+        %disp(stringtodisp);
         if SA_step==1
             X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
         end
-        options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+        options = optimoptions('simulannealbnd','Display', 'off'); % use Nelder-Mead optimization as hybrid function
 
         [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_3dof(x, Y, u, SA_step),X0,LB,UB,options);
 
         X0 = X;
     end
-    disp('---------------------------');
-    disp(sprintf('.........LOSS = %f',FVAL));
-    disp('---------------------------');
+    %disp('---------------------------');
+    %disp(sprintf('.........LOSS = %f',FVAL));
+    %disp('---------------------------');
     LOSSES(i) = FVAL;
     SOL(:,i) = X;
     OUTPUTS{i} = OUTPUT;
@@ -76,20 +76,20 @@ EXITFLAGS = zeros(num_of_runs,1);
 
 for i=1:num_of_runs
     for SA_step=1:num_of_SA_steps
-        stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
-        disp(stringtodisp);
+        %stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
+        %disp(stringtodisp);
         if SA_step==1
             X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
         end
-        options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+        options = optimoptions('simulannealbnd','Display', 'off'); % use Nelder-Mead optimization as hybrid function
 
         [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_3dof(x, Y, u, SA_step),X0,LB,UB,options);
 
         X0 = X;
     end
-    disp('---------------------------');
-    disp(sprintf('.........LOSS = %f',FVAL));
-    disp('---------------------------');
+    %disp('---------------------------');
+    %disp(sprintf('.........LOSS = %f',FVAL));
+    %disp('---------------------------');
     LOSSES(i) = FVAL;
     SOL(:,i) = X;
     OUTPUTS{i} = OUTPUT;

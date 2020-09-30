@@ -30,19 +30,19 @@ EXITFLAGS = zeros(num_of_runs,1);
 %----------------------------------
 
 for i=1:num_of_runs
-    stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
-    disp(stringtodisp);
+    %stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
+    %disp(stringtodisp);
 
     X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
 
-    options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+    options = optimoptions('simulannealbnd','Display', 'off'); % use Nelder-Mead optimization as hybrid function
 
     [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y, u),X0,LB,UB,options);
 
     X0 = X;
-    disp('---------------------------');
-    disp(sprintf('.........LOSS = %f',FVAL));
-    disp('---------------------------');
+    %disp('---------------------------');
+    %disp(sprintf('.........LOSS = %f',FVAL));
+    %disp('---------------------------');
     LOSSES(i) = FVAL;
     SOL(:,i) = X;
     OUTPUTS{i} = OUTPUT;
@@ -73,19 +73,19 @@ EXITFLAGS = zeros(num_of_runs,1);
 %----------------------------------
 
 for i=1:num_of_runs
-    stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
-    disp(stringtodisp);
+    %stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
+    %disp(stringtodisp);
 
     X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
 
-    options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+    options = optimoptions('simulannealbnd','Display', 'off'); % use Nelder-Mead optimization as hybrid function
 
     [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y, u),X0,LB,UB,options);
 
     X0 = X;
-    disp('---------------------------');
-    disp(sprintf('.........LOSS = %f',FVAL));
-    disp('---------------------------');
+    %disp('---------------------------');
+    %disp(sprintf('.........LOSS = %f',FVAL));
+    %disp('---------------------------');
     LOSSES(i) = FVAL;
     SOL(:,i) = X;
     OUTPUTS{i} = OUTPUT;
