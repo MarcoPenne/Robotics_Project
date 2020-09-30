@@ -3,7 +3,7 @@ function[points] = change_of_sign(u, threshold)
     stop = 1;
     iszero = u(1)<threshold & u(1)>-threshold;
     points = [];
-    semilenght = 0
+
     for j=1:(length(u)-1)
         % strting segment
         if (u(j) < threshold & u(j) > -threshold) & (u(j+1) >= threshold | u(j+1) <= -threshold)
