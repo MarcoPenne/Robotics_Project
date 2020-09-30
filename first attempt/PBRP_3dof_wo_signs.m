@@ -54,7 +54,17 @@ Y1_stack = Y_stack(1:3:3*num_of_samples, :);
 Y2_stack = Y_stack(2:3:3*num_of_samples, :);
 Y3_stack = Y_stack(3:3:3*num_of_samples, :);
 
-threshold = [0.005, 0.3, 0.2];
+sorted_u1 = sort(u1_3dof_abs);
+threshold1 = sorted_u1(int32(num_of_samples*0.1)+1);
+
+sorted_u2 = sort(u2_3dof_abs);
+threshold2 = sorted_u2(int32(num_of_samples*0.1)+1);
+
+sorted_u3 = sort(u3_3dof_abs);
+threshold3 = sorted_u3(int32(num_of_samples*0.1)+1);
+
+%threshold = [0.005, 0.3, 0.2];
+threshold = [threshold1, threshold2, threshold3];
 
 indices1 = change_of_sign(u1_3dof_abs, threshold(1));
 indices2 = change_of_sign(u2_3dof_abs, threshold(2));
