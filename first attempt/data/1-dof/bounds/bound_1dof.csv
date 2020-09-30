@@ -1,4 +1,4 @@
 Coeff name,Lower bound,Upper bound
-m,0,200
-d,0,1
-I,0,269.4
+M,0,10
+D,0,1
+I,0,8.417e-01
