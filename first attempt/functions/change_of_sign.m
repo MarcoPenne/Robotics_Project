@@ -6,11 +6,11 @@ function[points] = change_of_sign(u, threshold)
     semilenght = 0
     for j=1:(length(u)-1)
         % strting segment
-        if (u(j) < threshold & u(j) > -threshold) & (u(j+1) > threshold | u(j+1) < -threshold)
+        if (u(j) < threshold & u(j) > -threshold) & (u(j+1) >= threshold | u(j+1) <= -threshold)
             start = j+1;
             iszero = false;
         %stopping segment
-        elseif (u(j) > threshold | u(j) < -threshold) & (u(j+1) < threshold & u(j+1) > -threshold)
+        elseif (u(j) >= threshold | u(j) <= -threshold) & (u(j+1) < threshold & u(j+1) > -threshold)
             stop = j;
             points = [points;
                        start stop;];
