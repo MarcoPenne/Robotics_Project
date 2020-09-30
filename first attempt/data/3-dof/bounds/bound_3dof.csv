@@ -1,14 +1,14 @@
-﻿Coeff name;Lower bound;Upper bound
+Coeff name;Lower bound;Upper bound
 m1;0;3
 m2;0;3
 m3;0;3
 rc1x;0;0
-rc1y;0;0.3
+rc1y;-0.3;0
 rc1z;0;0
-rc2x;0;0.3
+rc2x;-0.3;0
 rc2y;0;0
-rc2z;0;0.1
-rc3x;0;0.2
+rc2z;-0.1;0
+rc3x;-0.2;0
 rc3y;0;0
 rc3z;0;0
 I1yy;0;0.0008
