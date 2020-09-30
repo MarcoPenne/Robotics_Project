@@ -33,19 +33,21 @@ num_of_joints = 1; % DoFs of the Franka Emika Panda robot
 %  with the inertia tensors expressed w.r.t. link CoMs
 
 % total samples retrieved during exciting trajectories
-load('data/1-dof/experiment10/Y_1dof.mat', 'Y_1dof')
-load('data/1-dof/experiment10/u_1dof.mat', 'u_1dof')
+load('data/1-dof/experiment11/Y_1dof.mat', 'Y_1dof')
+load('data/1-dof/experiment11/u_1dof.mat', 'u_1dof')
 u_1dof_abs = abs(u_1dof);
 
 num_of_samples = size(Y_1dof,1)/num_of_joints;
 
+sorted_u = sort(u_1dof_abs);
+threshold = sorted_u(int32(num_of_samples*0.1)+1);
 
 % ---------------------------
 % read lower and upper bounds
 % ---------------------------
 
 [LB,UB] = read_bounds('data/1-dof/bounds/bound_1dof.csv');
-threshold = 1;
+%threshold = 1;
 indices = change_of_sign(u_1dof_abs, threshold);
 indices_long = [];
 for i=1:size(indices, 1)
