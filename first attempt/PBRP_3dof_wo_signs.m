@@ -54,27 +54,29 @@ Y1_stack = Y_stack(1:3:3*num_of_samples, :);
 Y2_stack = Y_stack(2:3:3*num_of_samples, :);
 Y3_stack = Y_stack(3:3:3*num_of_samples, :);
 
-indices1 = change_of_sign(u1_3dof_abs, 0.005);
-indices2 = change_of_sign(u2_3dof_abs, 0.3);
-indices3 = change_of_sign(u3_3dof_abs, 0.2);
+threshold = [0.005, 0.3, 0.2];
 
-indices_long1 = []
-indices_long2 = []
-indices_long3 = []
+indices1 = change_of_sign(u1_3dof_abs, threshold(1));
+indices2 = change_of_sign(u2_3dof_abs, threshold(2));
+indices3 = change_of_sign(u3_3dof_abs, threshold(3));
+
+indices_long1 = [];
+indices_long2 = [];
+indices_long3 = [];
 
 for i=1:size(indices1, 1)
     if indices1(i, 2)-indices1(i, 1)>=20
-        indices_long1 = [indices_long1; indices1(i, :)]
+        indices_long1 = [indices_long1; indices1(i, :)];
     end
 end
 for i=1:size(indices2, 1)
     if indices2(i, 2)-indices2(i, 1)>=20
-        indices_long2 = [indices_long2; indices2(i, :)]
+        indices_long2 = [indices_long2; indices2(i, :)];
     end
 end
 for i=1:size(indices3, 1)
     if indices3(i, 2)-indices3(i, 1)>=20
-        indices_long3 = [indices_long3; indices3(i, :)]
+        indices_long3 = [indices_long3; indices3(i, :)];
     end
 end
 
@@ -82,34 +84,43 @@ indices1 = indices_long1;
 indices2 = indices_long2;
 indices3 = indices_long3;
 
-signs1 = []
+signs1 = [];
 
 for i=1:size(indices1, 1)
+    stringtodisp = sprintf('Finding best sign segment %d/%d JOINT 1',i,size(indices1, 1));
+    disp(stringtodisp);
+    
     [sign1, positive_optimal_solution1, negative_optimal_solution1] = choose_sign_3dof(Y1_stack(indices1(i, 1):indices1(i, 2), :), u1_3dof_abs(indices1(i, 1):indices1(i, 2)), LB, UB);
     signs1 = [signs1, sign1];
-    disp(sign1)
-    disp(positive_optimal_solution1)
-    disp(negative_optimal_solution1)
+    disp("Choosen: "+sign1)
+    %disp(positive_optimal_solution1)
+    %disp(negative_optimal_solution1)
 end
 
-signs2 = []
+signs2 = [];
 
 for i=1:size(indices2, 1)
+    stringtodisp = sprintf('Finding best sign segment %d/%d JOINT 2',i,size(indices2, 1));
+    disp(stringtodisp);
+    
     [sign2, positive_optimal_solution2, negative_optimal_solution2] = choose_sign_3dof(Y2_stack(indices2(i, 1):indices2(i, 2), :), u2_3dof_abs(indices2(i, 1):indices2(i, 2)), LB, UB);
     signs2 = [signs2, sign2];
-    disp(sign2)
-    disp(positive_optimal_solution2)
-    disp(negative_optimal_solution2)
+    disp("Choosen: "+sign2)
+    %disp(positive_optimal_solution2)
+    %disp(negative_optimal_solution2)
 end
 
-signs3 = []
+signs3 = [];
 
 for i=1:size(indices3, 1)
+    stringtodisp = sprintf('Finding best sign segment %d/%d JOINT 3',i,size(indices3, 1));
+    disp(stringtodisp);
+    
     [sign3, positive_optimal_solution3, negative_optimal_solution3] = choose_sign_3dof(Y3_stack(indices3(i, 1):indices3(i, 2), :), u3_3dof_abs(indices3(i, 1):indices3(i, 2)), LB, UB);
     signs3 = [signs3, sign3];
-    disp(sign3)
-    disp(positive_optimal_solution3)
-    disp(negative_optimal_solution3)
+    disp("Choosen: "+sign3)
+    %disp(positive_optimal_solution3)
+    %disp(negative_optimal_solution3)
 end
 
 u1_estimated_sign = [];
@@ -241,12 +252,28 @@ for i = 1 : num_of_samples
     end
 end
 
+indices = {indices1, indices2, indices3};
+signs = {signs1, signs2, signs3};
 % plot validation results
 figure
 samples = 1:num_of_samples;
 for i=1:num_of_joints
     subplot(3,1,i);
+    hold on
     plot(samples,TAU_TRUE(i,:),samples,TAU_ESTD(i,:));
+    for seg=1:size(indices{i},1)
+        xline(indices{i}(seg, 1), '--g');
+        xline(indices{i}(seg, 2), '--r');
+        if signs{i}(seg)>0
+            lab = '+';
+        else
+            lab = '-';
+        end
+        text(0.5*indices{i}(seg, 2) + 0.5*indices{i}(seg, 1), 0, lab, 'HorizontalAlignment', 'center');
+    end
+    yline(threshold(i), '--o');
+    yline(-threshold(i), '--o');
+    hold off
     grid;
     xlabel('samples [#]');
     ylabel('torque [Nm]');
@@ -256,9 +283,11 @@ for i=1:num_of_joints
 end
 
 estimated_coefficients = get_3dof_coefficients(m1,rc1x,rc1y,rc1z,I1yy,m2,rc2x,rc2y,rc2z,I2xx,I2yy,I2zz,m3,rc3x,rc3y,rc3z,I3xx,I3yy,I3zz);
-ground_coefficients = get_3dof_coefficients(1.5, 0, 0.15, 0, 4.167e-04*1.5, 1.125, -0.15, 0, -0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, -0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
+ground_coefficients = get_3dof_coefficients(1.5, 0, 0.15, 0, 4.167e-04*1.5, 1.125, 0.15, 0, 0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, 0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
 
 a_3dof = pinv(Y_stack)*u_stack;
+
+error_measure = norm(estimated_coefficients - ground_coefficients);
 
 disp('The estimated dynamic coefficients w/o torque signs are:')
 disp(estimated_coefficients)
@@ -266,3 +295,5 @@ disp('The ground values of the dynamic coefficients are:')
 disp(ground_coefficients)
 disp('The estimated dynamic coefficients with torque signs are:')
 disp(a_3dof)
+disp('The norm of the difference between estimated dynamic coefficients w/o torque signs and ground values is:')
+disp(error_measure)

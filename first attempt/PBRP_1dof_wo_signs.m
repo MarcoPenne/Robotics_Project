@@ -45,24 +45,27 @@ num_of_samples = size(Y_1dof,1)/num_of_joints;
 % ---------------------------
 
 [LB,UB] = read_bounds('data/1-dof/bounds/bound_1dof.csv');
-
-indices = change_of_sign(u_1dof_abs, 1);
-indices_long = []
+threshold = 1;
+indices = change_of_sign(u_1dof_abs, threshold);
+indices_long = [];
 for i=1:size(indices, 1)
     if indices(i, 2)-indices(i, 1)>=20
-        indices_long = [indices_long; indices(i, :)]
+        indices_long = [indices_long; indices(i, :)];
     end
 end
 indices = indices_long;
 
-signs = []
+signs = [];
 
 for i=1:size(indices, 1)
+    stringtodisp = sprintf('Finding best sign segment %d/%d',i,size(indices, 1));
+    disp(stringtodisp);
+    
     [sign, positive_optimal_solution, negative_optimal_solution] = choose_sign_1dof(Y_1dof(indices(i, 1):indices(i, 2), :), u_1dof_abs(indices(i, 1):indices(i, 2)), LB, UB);
     signs = [signs, sign];
-    disp(sign)
-    disp(positive_optimal_solution)
-    disp(negative_optimal_solution)
+    disp("Choosen: "+sign)
+    %disp(positive_optimal_solution)
+    %disp(negative_optimal_solution)
 end
 
 u_estimated_sign = [];
@@ -144,6 +147,7 @@ tau_stack_estimation = Y_1dof*P_li_expanded_eval;
 % reshape tau_stack vectors (measured and estimated)
 TAU_TRUE = zeros(num_of_joints,num_of_samples);
 TAU_ESTD = zeros(num_of_joints,num_of_samples);
+TAU_SIGN_ESTD = zeros(num_of_joints,num_of_samples);
 for i = 1 : num_of_samples
     for j = 1:num_of_joints
         TAU_TRUE(j,i) = u_1dof((i-1) + j);
@@ -156,7 +160,22 @@ figure
 samples = 1:num_of_samples;
 for i=1:num_of_joints
     subplot(1,1,i);
+    hold on
     plot(samples,TAU_TRUE(i,:),samples,TAU_ESTD(i,:));
+    
+    for seg=1:size(indices,1)
+        xline(indices(seg, 1), '--g');
+        xline(indices(seg, 2), '--r');
+        if signs(seg)>0
+            lab = '+';
+        else
+            lab = '-';
+        end
+        text(0.5*indices(seg, 2) + 0.5*indices(seg, 1), 0, lab, 'HorizontalAlignment', 'center');
+    end
+    yline(threshold, '--o');
+    yline(-threshold, '--o');
+    hold off
     grid;
     xlabel('samples [#]');
     ylabel('torque [Nm]');
@@ -168,7 +187,8 @@ end
 estimated_coefficients = get_1dof_coefficients(optimal_solution(1),optimal_solution(2),optimal_solution(3));
 ground_coefficients = get_1dof_coefficients(5,0.5,5*(8.417e-02));
 
-a_1dof = pinv(Y_1dof)*u_1dof
+a_1dof = pinv(Y_1dof)*u_1dof;
+error_measure = norm(estimated_coefficients - ground_coefficients);
 
 disp('The estimated dynamic coefficients w/o torque signs are:')
 disp(estimated_coefficients)
@@ -176,3 +196,5 @@ disp('The ground values of the dynamic coefficients are:')
 disp(ground_coefficients)
 disp('The estimated dynamic coefficients with torque signs are:')
 disp(a_1dof)
+disp('The norm of the difference between estimated dynamic coefficients w/o torque signs and ground values is:')
+disp(error_measure)
