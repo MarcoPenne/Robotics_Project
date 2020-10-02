@@ -59,11 +59,11 @@ A = simplify(A01*A12*A23);
 
 p = A*[0;0;0;1];
 
-p = [p(1:3,1)]
+p = [p(1:3,1)];
 
 % Jacobian
 
-J = simplify(jacobian(p,q))
+J = simplify(jacobian(p,q));
 
 % Moving frames algorithm
 
@@ -90,7 +90,7 @@ T1 = simplify((1/2)*m1*(norm(vc1))^2+(1/2)*w11'*Jc1*w11);
 T2 = simplify((1/2)*m2*(norm(vc2))^2+(1/2)*w22'*Jc2*w22);
 T3 = simplify((1/2)*m3*(norm(vc3))^2+(1/2)*w33'*Jc3*w33);
 
-T = simplify(T1+T2+T3)
+T = simplify(T1+T2+T3);
 
 % Potential energies
 
@@ -108,11 +108,11 @@ U2 = simplify(-m2*[0;0;-g0]'*r0c2);
 
 U3 = simplify(-m3*[0;0;-g0]'*r0c3);
 
-U = simplify(U1+U2+U3)
+U = simplify(U1+U2+U3);
 
 % Gravity term
 
-g = simplify(jacobian(U,q)')
+g = simplify(jacobian(U,q)');
 
 % Automatic Inertia Matrix
 syms B [3 3] real
@@ -130,7 +130,6 @@ for i=1:3
 end
 
 B = simplify(B);
-B
 
 B1 = [B(1:3,1)];
 B2 = [B(1:3,2)];
@@ -148,7 +147,7 @@ c1 = simplify(dq'*C1*dq);
 c2 = simplify(dq'*C2*dq);
 c3 = simplify(dq'*C3*dq);
 
-cc = [c1;c2;c3]
+cc = [c1;c2;c3];
 
 % Dynamic model
 
