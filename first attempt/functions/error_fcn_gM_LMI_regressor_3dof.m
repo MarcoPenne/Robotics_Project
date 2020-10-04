@@ -53,8 +53,8 @@ loss = (error'*error);
 
 % conditions on total mass
 
-min_mass = 1.5;
-max_mass = 5;
+min_mass = 10;
+max_mass = 15;
 
 if m1+m2+m3 < min_mass
     loss = loss + penalty*(min_mass-(m1+m2+m3));
