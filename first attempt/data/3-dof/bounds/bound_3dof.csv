@@ -1,5 +1,5 @@
 Coeff name;Lower bound;Upper bound
-m1;0;3
+m1;0;20
 m2;0;3
 m3;0;3
 rc1x;0;0
@@ -11,7 +11,7 @@ rc2z;-0.1;0
 rc3x;-0.2;0
 rc3y;0;0
 rc3z;0;0
-I1yy;0;0.0008
+I1yy;0;0.009
 I2xx;0;0.0008
 I2yy;0;0.015
 I2zz;0;0.015
