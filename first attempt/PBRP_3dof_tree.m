@@ -33,8 +33,8 @@ num_of_joints = 3; % DoFs of the Franka Emika Panda robot
 %  with the inertia tensors expressed w.r.t. link CoMs
 
 % total samples retrieved during exciting trajectories
-load('data/3-dof/experiment2/Y_stack.mat', 'Y_stack')
-load('data/3-dof/experiment2/u_stack.mat', 'u_stack')
+load('data/3-dof/experiment4/Y_stack.mat', 'Y_stack')
+load('data/3-dof/experiment4/u_stack.mat', 'u_stack')
 u_3dof_abs = abs(u_stack);
 
 num_of_samples = size(Y_stack,1)/num_of_joints;
@@ -230,7 +230,7 @@ for i=1:num_of_joints
 end
 
 estimated_coefficients = get_3dof_coefficients(m1,rc1x,rc1y,rc1z,I1yy,m2,rc2x,rc2y,rc2z,I2xx,I2yy,I2zz,m3,rc3x,rc3y,rc3z,I3xx,I3yy,I3zz);
-ground_coefficients = get_3dof_coefficients(1.5, 0, 0.15, 0, 4.167e-04*1.5, 1.125, 0.15, 0, 0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, 0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
+ground_coefficients = get_3dof_coefficients(10, 0, 0.15, 0, 4.167e-04*10, 1.125, 0.15, 0, 0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, 0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
 
 a_3dof = pinv(Y_stack)*u_stack;
 
