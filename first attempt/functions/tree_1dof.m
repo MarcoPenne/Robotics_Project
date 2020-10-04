@@ -4,7 +4,7 @@ function [Y_final, u_final, signs_finals] = tree_1dof(Y, u, indices, LB, UB)
     n_top_pool = 5;
     num_x = length(LB);
     TOP_POOL = zeros(n_top_pool, num_x);
-    TOP_SIGNS = {[]};
+    TOP_SIGNS = {zeros(n_segments,1)};
     TOP_RESULTS = {rand(num_x,1).*(UB-LB) + LB};
     TOP_LOSSES = [Inf];
     TOP_Y = {[]};
@@ -29,54 +29,60 @@ function [Y_final, u_final, signs_finals] = tree_1dof(Y, u, indices, LB, UB)
     Y = {};
     U = {};
     for k = 1:length(permuted_order)
-        i = k;%permuted_order(k);
+        i = permuted_order(k);
+        
+        string2disp = sprintf("PROCESSING SEGMENT %d/%d  (%d)", k, n_segments, i);
+        disp(string2disp);
+        
         for pool=1:size(TOP_Y, 2)
             Y_now = [TOP_Y{pool}; Y_segments{i}];
             U_now = [TOP_U{pool}; u_segments{i}];
-            Y_now = double(Y_now)
-            U_now = double(U_now)
+            Y_now = double(Y_now);
+            U_now = double(U_now);
 
-            Y{length(Y)+1} = Y_now
-            U{length(U)+1} = U_now
+            Y{length(Y)+1} = Y_now;
+            U{length(U)+1} = U_now;
             
-            [loss_pos, solution_pos] = solve_optimization_1dof(Y_now, U_now, LB, UB, TOP_RESULTS{pool})
+            [loss_pos, solution_pos] = solve_optimization_1dof(Y_now, U_now, LB, UB, TOP_RESULTS{pool});
             LOSSES = [LOSSES, loss_pos];
             RESULTS = [RESULTS, solution_pos];
-            signs_now = [TOP_SIGNS{pool},1];
+            signs_now = TOP_SIGNS{pool};
+            signs_now(i) = 1;
             SIGNS = [SIGNS, signs_now];
             
-            Y_now = [TOP_Y{pool}; Y_segments{i}]
-            U_now = [TOP_U{pool}; -u_segments{i}]
+            Y_now = [TOP_Y{pool}; Y_segments{i}];
+            U_now = [TOP_U{pool}; -u_segments{i}];
             
-            Y{length(Y)+1} = Y_now
-            U{length(U)+1} = U_now
+            Y{length(Y)+1} = Y_now;
+            U{length(U)+1} = U_now;
             
-            [loss_neg, solution_neg] = solve_optimization_1dof(Y_now, U_now, LB, UB, TOP_RESULTS{pool})
+            [loss_neg, solution_neg] = solve_optimization_1dof(Y_now, U_now, LB, UB, TOP_RESULTS{pool});
             LOSSES = [LOSSES, loss_neg];
             RESULTS = [RESULTS, solution_neg];
-            signs_now = [TOP_SIGNS{pool},-1];
+            signs_now = TOP_SIGNS{pool};
+            signs_now(i) = -1;
             SIGNS = [SIGNS, signs_now];
         end
         
-        [~,LOSS_sort] = sort(LOSSES)
-        Y = Y(LOSS_sort)
-        U = U(LOSS_sort)
-        RESULTS = RESULTS(LOSS_sort)
-        SIGNS = SIGNS(LOSS_sort)
-        LOSSES = LOSSES(LOSS_sort)
+        [~,LOSS_sort] = sort(LOSSES);
+        Y = Y(LOSS_sort);
+        U = U(LOSS_sort);
+        RESULTS = RESULTS(LOSS_sort);
+        SIGNS = SIGNS(LOSS_sort);
+        LOSSES = LOSSES(LOSS_sort);
         
         if n_top_pool<length(LOSSES)
-            TOP_Y = Y(1:n_top_pool)
-            TOP_U = U(1:n_top_pool)
-            TOP_LOSSES = LOSSES(1:n_top_pool)
-            TOP_RESULTS = RESULTS(1:n_top_pool)
-            TOP_SIGNS = SIGNS(1:n_top_pool)
+            TOP_Y = Y(1:n_top_pool);
+            TOP_U = U(1:n_top_pool);
+            TOP_LOSSES = LOSSES(1:n_top_pool);
+            TOP_RESULTS = RESULTS(1:n_top_pool);
+            TOP_SIGNS = SIGNS(1:n_top_pool);
         else
-            TOP_Y = Y
-            TOP_U = U
-            TOP_LOSSES = LOSSES
-            TOP_RESULTS = RESULTS
-            TOP_SIGNS = SIGNS
+            TOP_Y = Y;
+            TOP_U = U;
+            TOP_LOSSES = LOSSES;
+            TOP_RESULTS = RESULTS;
+            TOP_SIGNS = SIGNS;
         end
         
         LOSSES = [];

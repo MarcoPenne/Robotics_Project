@@ -57,7 +57,7 @@ for i=1:size(indices, 1)
 end
 indices = indices_long;
 
-[Y_estimated,u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB)
+[Y_estimated,u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
 
 %----------------------------------
 % initializations
