@@ -1,6 +1,7 @@
 function [Y_final, u_final, signs_finals] = forest_franka(Y_segments, u_segments, LB, UB, n_segments, n_trees, maximum_depth)
     
     estimated_signs = zeros(n_segments, 1);
+    %load data/franka_emika_panda/sub_trees_signs estimated_signs
     
     for i=1:n_trees
         str2disp = sprintf("COMPUTING TREE %d of %d", i, n_trees);
