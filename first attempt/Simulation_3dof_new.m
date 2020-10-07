@@ -67,7 +67,7 @@ pause(5);
 start = datetime('now');
 
 i = 1;
-while seconds(datetime('now')-start) < period * 3
+while seconds(datetime('now')-start) < period
     
     t = seconds(datetime('now')-start);
     time_axis(i) = t;
@@ -112,32 +112,47 @@ subplot(3,3,3);
 plot(time_axis(1, 1:i-1), reference_pos(3, 1:i-1), time_axis(1, 1:i-1), measured_pos(3, 1:i-1));
 legend ("reference pos j3", "measured pos j3")
 
+ORDER = 16;
+FC_HIGH = 1/(16*frame_period);  % Hz, used in low-pass and band-pass filters
+
+filt = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
+
 estimated_velocity = [gradient(measured_pos(1, 1:i-1),frame_period); gradient(measured_pos(2, 1:i-1),frame_period); gradient(measured_pos(3, 1:i-1),frame_period);];
 
+filtered_vel = zeros(3, i-1);
+filtered_vel(1, :) = filtfilt(filt, estimated_velocity(1,:));
+filtered_vel(2, :) = filtfilt(filt, estimated_velocity(2,:));
+filtered_vel(3, :) = filtfilt(filt, estimated_velocity(3,:));
+
 subplot(3,3,4);
-plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(1, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
 legend ("reference vel j1", "velocity j1")
 
 subplot(3,3,5);
-plot(time_axis(1, 1:i-1), reference_vel(2, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(2, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_vel(2, 1:i-1), time_axis(1, 1:i-1), filtered_vel(2, 1:i-1));
 legend ("reference vel j2", "velocity j2")
 
 subplot(3,3,6);
-plot(time_axis(1, 1:i-1), reference_vel(3, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(3, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_vel(3, 1:i-1), time_axis(1, 1:i-1), filtered_vel(3, 1:i-1));
 legend ("reference vel j3", "velocity j3");
 
-estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(2, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(3, 1:i-1),frame_period),frame_period);];
+estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(2, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(3, 1:i-1),frame_period),frame_period)];
+
+filtered_acc = zeros(3, i-1);
+filtered_acc(1, :) = filtfilt(filt, estimated_acceleration(1,:));
+filtered_acc(2, :) = filtfilt(filt, estimated_acceleration(2,:));
+filtered_acc(3, :) = filtfilt(filt, estimated_acceleration(3,:));
 
 subplot(3,3,7);
-plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(1, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), filtered_acc(1, 1:i-1));
 legend ("reference acc j1", "acceleration j1")
 
 subplot(3,3,8);
-plot(time_axis(1, 1:i-1), reference_acc(2, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(2, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_acc(2, 1:i-1), time_axis(1, 1:i-1), filtered_acc(2, 1:i-1));
 legend ("reference acc j2", "acceleration j2")
 
 subplot(3,3,9);
-plot(time_axis(1, 1:i-1), reference_acc(3, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(3, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_acc(3, 1:i-1), time_axis(1, 1:i-1), filtered_acc(3, 1:i-1));
 legend ("reference vel j3", "acceleration j3");
 
 for j=1:i-1
@@ -159,3 +174,13 @@ subplot(3,1,3);
 plot(time_axis(1, 1:i-1), measured_torque(3, 1:i-1), time_axis(1, 1:i-1), reference_torque(3, 1:i-1));
 legend ("torque j3", "reference torque3");
 
+Y_stack = zeros((i-1)*3,13);
+u_stack = zeros((i-1)*3,1);
+
+for k=1:(i-1)
+    Y_stack(k*3-2:k*3,:) = Y_matrix(measured_pos(1,k),measured_pos(2,k),measured_pos(3,k),filtered_vel(1,k),filtered_vel(2,k),filtered_vel(3,k),filtered_acc(1,k),filtered_acc(2,k),filtered_acc(3,k));
+    u_stack(k*3-2:k*3,:) = measured_torque(:,k);
+end
+
+coefficients = pinv(Y_stack)*u_stack;
+error = norm(coefficients-a)
