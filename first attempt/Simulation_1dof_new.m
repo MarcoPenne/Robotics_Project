@@ -96,15 +96,24 @@ legend ("reference pos", "measured pos")
 
 estimated_velocity = [gradient(measured_pos(1, 1:i-1),frame_period)];
 
+ORDER = 16;
+FC_HIGH = 1/(16*frame_period);  % Hz, used in low-pass and band-pass filters
+
+filt = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
+
+filtered_vel = filtfilt(filt, estimated_velocity);
+
 subplot(3,1,2);
-plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(1, 1:i-1));
-legend ("reference vel", "velocity")
+plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
+legend ("reference vel", "measured velocity", "filtered velocity")
 
 estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period)];
 
+filtered_acc = filtfilt(filt, estimated_acceleration);
+
 subplot(3,1,3);
-plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(1, 1:i-1));
-legend ("reference acc", "acceleration")
+plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(1, 1:i-1), time_axis(1, 1:i-1), filtered_acc(1, 1:i-1));
+legend ("reference acc", "measured acceleration", "filtered acceleration")
 
 for j=1:i-1
     Y = Y_matrix_1dof(reference_pos(j), reference_acc(j));
@@ -112,7 +121,9 @@ for j=1:i-1
     reference_torque(j) = Y*a;
 end
 
+filtered_torque = filtfilt(filt, measured_torque);
+
 figure('Name', 'Torques');
 subplot(1,1,1);
-plot(time_axis(1, 1:i-1), measured_torque(1, 1:i-1), time_axis(1, 1:i-1), reference_torque(1, 1:i-1));
-legend ("torque", "reference torque")
+plot(time_axis(1, 1:i-1), measured_torque(1, 1:i-1), time_axis(1, 1:i-1), reference_torque(1, 1:i-1), time_axis(1, 1:i-1), filtered_torque(1, 1:i-1));
+legend ("measured torque", "reference torque", "filtered torque")
