@@ -17,7 +17,7 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
 if (clientID>-1)
     disp('Connected to remote API server');
-    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking)
+    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking);
     display(returnCode);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
@@ -59,7 +59,7 @@ pause(5);
 start = datetime('now');
 
 i = 1;
-while seconds(datetime('now')-start) < period
+while seconds(datetime('now')-start) < period * 3
     
     t = seconds(datetime('now')-start);
     time_axis(i) = t;
@@ -127,3 +127,15 @@ figure('Name', 'Torques');
 subplot(1,1,1);
 plot(time_axis(1, 1:i-1), measured_torque(1, 1:i-1), time_axis(1, 1:i-1), reference_torque(1, 1:i-1), time_axis(1, 1:i-1), filtered_torque(1, 1:i-1));
 legend ("measured torque", "reference torque", "filtered torque")
+
+Y_1dof = zeros(i-1,2);
+u_1dof = zeros(i-1,1);
+
+for k=1:(i-1)
+    Y_1dof(k, :) = Y_matrix_1dof(measured_pos(k), filtered_acc(k));
+    u_1dof(k,:) = filtered_torque(k);
+end
+
+experiment_path = 'data/1-dof/new_experiment4';
+save(fullfile(experiment_path,'Y_1dof.mat'), 'Y_1dof');
+save(fullfile(experiment_path,'u_1dof.mat'), 'u_1dof');
