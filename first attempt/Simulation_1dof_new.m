@@ -1,3 +1,5 @@
+clc
+close all
 clear all
 addpath("functions/");
 
@@ -15,7 +17,7 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
 if (clientID>-1)
     disp('Connected to remote API server');
-    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control.ttt',1,sim.simx_opmode_blocking)
+    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking)
     display(returnCode);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
@@ -32,7 +34,7 @@ end
 
 % period = 20;
 
-trajectory_path = 'data/1-dof/trajectory1';
+trajectory_path = 'data/1-dof/trajectory2';
 [position, velocity, acceleration, time] = load_trajectory(trajectory_path);
 [position, velocity, acceleration] = looping_splines(position, time);
 
@@ -62,8 +64,12 @@ while seconds(datetime('now')-start) < period
     t = seconds(datetime('now')-start);
     time_axis(i) = t;
     
-    [returnCode,joint_position]=sim.simxGetJointPosition(clientID,joint,sim.simx_opmode_blocking);
-    measured_pos(i) = [joint_position];
+    [returnCode,joint_position]=sim.simxGetJointPosition(clientID,joint,sim.simx_opmode_streaming);
+    if returnCode==0
+        measured_pos(i) = joint_position;
+    else
+        measured_pos(i) = 0;
+    end
     
     % Sending commands
     sim.simxPauseCommunication(clientID,1);
@@ -73,12 +79,12 @@ while seconds(datetime('now')-start) < period
     reference_vel(i) = [velocity(t)];
     reference_acc(i) = [acceleration(t)];
     
-    [returnCode,u]=sim.simxGetJointForce(clientID,joint,sim.simx_opmode_blocking);
+    [returnCode,u]=sim.simxGetJointForce(clientID,joint,sim.simx_opmode_streaming);
     measured_torque(i) = [-u];
     
     frame_period = seconds(datetime('now')-start)/i;
     i=i+1;
-    
+    pause(0.02);
 end
 
 sim.simxStopSimulation(clientID, sim.simx_opmode_oneshot);
