@@ -16,7 +16,7 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
 if (clientID>-1)
     disp('Connected to remote API server');
-    [returnCode]=sim.simxLoadScene(clientID,'scenes/3-dof_position_control_vortex.ttt',1,sim.simx_opmode_blocking)
+    [returnCode]=sim.simxLoadScene(clientID,'scenes/3-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking)
     display(returnCode);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
@@ -25,9 +25,12 @@ if (clientID>-1)
     [returnCode,joint1] = sim.simxGetObjectHandle(clientID,'Joint1', sim.simx_opmode_blocking)
     [returnCode,joint2] = sim.simxGetObjectHandle(clientID,'Joint2', sim.simx_opmode_blocking)
     [returnCode,joint3] = sim.simxGetObjectHandle(clientID,'Joint3', sim.simx_opmode_blocking)
+    [returnCode,link1] = sim.simxGetObjectHandle(clientID,'Link1', sim.simx_opmode_blocking)
+    [returnCode,link2] = sim.simxGetObjectHandle(clientID,'Link2', sim.simx_opmode_blocking)
+    [returnCode,link3] = sim.simxGetObjectHandle(clientID,'Link3', sim.simx_opmode_blocking)
     
     joints = [joint1,joint2,joint3]
-    
+    links = [link1, link2, link3]
 else
     disp('Failed connecting to remote API server');
 end
@@ -77,6 +80,7 @@ end
 sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot);
 
 measured_pos = zeros(3, 500000);
+measured_vel = zeros(3, 500000);
 reference_pos = zeros(3, 500000);
 measured_torque = zeros(3, 500000);
 time_axis = zeros(1, 500000);
@@ -94,7 +98,7 @@ while seconds(datetime('now')-start) < period
     [returnCode,joint_position2]=sim.simxGetJointPosition(clientID,joints(2),sim.simx_opmode_streaming);
     [returnCode,joint_position3]=sim.simxGetJointPosition(clientID,joints(3),sim.simx_opmode_streaming);
     measured_pos(:, i) = [joint_position1; joint_position2; joint_position3];
-    
+
     % Sending commands
     sim.simxPauseCommunication(clientID,1);
     sim.simxSetJointTargetPosition(clientID, joints(1), position{1}(t), sim.simx_opmode_streaming);
@@ -132,7 +136,7 @@ plot(time_axis(1, 1:i-1), reference_pos(3, 1:i-1), time_axis(1, 1:i-1), measured
 legend ("reference pos j3", "measured pos j3")
 
 ORDER = 16;
-FC_HIGH = 1/(16*frame_period);  % Hz, used in low-pass and band-pass filters
+FC_HIGH = 0.1*pi*5;  % Hz, used in low-pass and band-pass filters
 
 filt = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
 
