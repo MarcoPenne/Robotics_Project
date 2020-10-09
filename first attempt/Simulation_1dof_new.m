@@ -18,12 +18,12 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 if (clientID>-1)
     disp('Connected to remote API server');
     [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking);
-    display(returnCode);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
     sim.simxAddStatusbarMessage(clientID,'Hello CoppeliaSim!',sim.simx_opmode_oneshot);
     
     [returnCode,joint] = sim.simxGetObjectHandle(clientID,'Joint', sim.simx_opmode_blocking);
+    [returnCode,link] = sim.simxGetObjectHandle(clientID,'Link1', sim.simx_opmode_blocking);
 else
     disp('Failed connecting to remote API server');
 end
@@ -51,6 +51,7 @@ fplot(acceleration, [0 period]);
 sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot);
 
 measured_pos = zeros(1, 500000);
+measured_vel = zeros(1, 500000);
 reference_pos = zeros(1, 500000);
 measured_torque = zeros(1, 500000);
 time_axis = zeros(1, 500000);
@@ -70,6 +71,8 @@ while seconds(datetime('now')-start) < period * 3
     else
         measured_pos(i) = 0;
     end
+    [returnCode, linear, angular] = sim.simxGetObjectVelocity(clientID, link, sim.simx_opmode_streaming);
+    measured_vel(i) = angular(1);
     
     % Sending commands
     sim.simxPauseCommunication(clientID,1);
@@ -97,17 +100,17 @@ legend ("reference pos", "measured pos")
 estimated_velocity = [gradient(measured_pos(1, 1:i-1),frame_period)];
 
 ORDER = 16;
-FC_HIGH = 1/(16*frame_period);  % Hz, used in low-pass and band-pass filters
+FC_HIGH = 0.1*pi*5;  % Hz, used in low-pass and band-pass filters
 
 filt = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
 
-filtered_vel = filtfilt(filt, estimated_velocity);
+filtered_vel = filtfilt(filt, measured_vel);
 
 subplot(3,1,2);
-plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
+plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), measured_vel(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
 legend ("reference vel", "measured velocity", "filtered velocity")
 
-estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period)];
+estimated_acceleration = [gradient(filtered_vel,frame_period)];
 
 filtered_acc = filtfilt(filt, estimated_acceleration);
 
