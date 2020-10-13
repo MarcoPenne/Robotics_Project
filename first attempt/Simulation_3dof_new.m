@@ -39,29 +39,29 @@ end
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
 
-[x1, y1, z1] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
-[x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
-[x3, y3, z3] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
+% [x1, y1, z1] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
+% [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
+% [x3, y3, z3] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
 
 % [x1, y1, z1] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
  
-% [position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory1');
-% [position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory2');
-% [position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory3');
-% 
-% time_tmp = [time1; time2; time3];
-% position_tmp = [position1; position2; position3];
-% velocity_tmp = [velocity1; velocity2; velocity3];
-% acceleration_tmp = [acceleration1; acceleration2; acceleration3];
-% 
-% [x1, y1, z1] = looping_splines(position_tmp(1,:), time_tmp(1,:));
-% [x2, y2, z2] = looping_splines(position_tmp(2,:), time_tmp(2,:));
-% [x3, y3, z3] = looping_splines(position_tmp(3,:), time_tmp(3,:));
+[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory1');
+[position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory2');
+[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory3');
 
-% period = double(lcm(sym([time_tmp(1, size(time_tmp, 2)), time_tmp(2, size(time_tmp, 2)), time_tmp(3, size(time_tmp, 2))])));
-period = 20;
+time_tmp = [time1; time2; time3];
+position_tmp = [position1; position2; position3];
+velocity_tmp = [velocity1; velocity2; velocity3];
+acceleration_tmp = [acceleration1; acceleration2; acceleration3];
+
+[x1, y1, z1] = looping_splines(position_tmp(1,:), time_tmp(1,:));
+[x2, y2, z2] = looping_splines(position_tmp(2,:), time_tmp(2,:));
+[x3, y3, z3] = looping_splines(position_tmp(3,:), time_tmp(3,:));
+
+period = double(lcm(sym([time_tmp(1, size(time_tmp, 2)), time_tmp(2, size(time_tmp, 2)), time_tmp(3, size(time_tmp, 2))])));
+%period = 20;
 
 position = {x1, x2, x3};
 velocity = {y1, y2, y3};
@@ -89,14 +89,24 @@ pause(5);
 start = datetime('now');
 
 i = 1;
-while seconds(datetime('now')-start) < period
+while seconds(datetime('now')-start) < period * 3
     
     t = seconds(datetime('now')-start);
     time_axis(i) = t;
     
     [returnCode,joint_position1]=sim.simxGetJointPosition(clientID,joints(1),sim.simx_opmode_streaming);
+    if returnCode~=0
+        joint_position1 = 0;
+    end
     [returnCode,joint_position2]=sim.simxGetJointPosition(clientID,joints(2),sim.simx_opmode_streaming);
+    if returnCode~=0
+        joint_position2 = -pi/2;
+    end
     [returnCode,joint_position3]=sim.simxGetJointPosition(clientID,joints(3),sim.simx_opmode_streaming);
+    if returnCode~=0
+        joint_position3 = 0;
+    end
+    
     measured_pos(:, i) = [joint_position1; joint_position2; joint_position3];
 
     % Sending commands
@@ -212,3 +222,7 @@ end
 
 coefficients = pinv(Y_stack)*u_stack;
 error = norm(coefficients-a)
+
+experiment_path = 'data/3-dof/experiment6';
+save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
+save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
