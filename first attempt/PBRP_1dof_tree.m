@@ -33,8 +33,8 @@ num_of_joints = 1; % DoFs of the Franka Emika Panda robot
 %  with the inertia tensors expressed w.r.t. link CoMs
 
 % total samples retrieved during exciting trajectories
-load('data/1-dof/experiment4/Y_1dof.mat', 'Y_1dof')
-load('data/1-dof/experiment4/u_1dof.mat', 'u_1dof')
+load('data/1-dof/new_experiment4/Y_1dof.mat', 'Y_1dof')
+load('data/1-dof/new_experiment4/u_1dof.mat', 'u_1dof')
 u_1dof_abs = abs(u_1dof);
 
 num_of_samples = size(Y_1dof,1)/num_of_joints;
