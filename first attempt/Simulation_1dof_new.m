@@ -74,6 +74,9 @@ while seconds(datetime('now')-start) < period * 3
     [returnCode, linear, angular] = sim.simxGetObjectVelocity(clientID, link, sim.simx_opmode_streaming);
     measured_vel(i) = angular(1);
     
+    [returnCode,u]=sim.simxGetJointForce(clientID,joint,sim.simx_opmode_streaming);
+    measured_torque(i) = [-u];
+    
     % Sending commands
     sim.simxPauseCommunication(clientID,1);
     sim.simxSetJointTargetPosition(clientID, joint, position(t), sim.simx_opmode_streaming);
@@ -81,9 +84,6 @@ while seconds(datetime('now')-start) < period * 3
     reference_pos(i) = [position(t)];
     reference_vel(i) = [velocity(t)];
     reference_acc(i) = [acceleration(t)];
-    
-    [returnCode,u]=sim.simxGetJointForce(clientID,joint,sim.simx_opmode_streaming);
-    measured_torque(i) = [-u];
     
     frame_period = seconds(datetime('now')-start)/i;
     i=i+1;
@@ -100,7 +100,7 @@ legend ("reference pos", "measured pos")
 estimated_velocity = [gradient(measured_pos(1, 1:i-1),frame_period)];
 
 ORDER = 16;
-FC_HIGH = 0.1*pi*5;  % Hz, used in low-pass and band-pass filters
+FC_HIGH = 0.35*pi;%0.1*pi*5;  % Hz, used in low-pass and band-pass filters
 
 filt = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
 
@@ -142,3 +142,5 @@ end
 experiment_path = 'data/1-dof/new_experiment4';
 save(fullfile(experiment_path,'Y_1dof.mat'), 'Y_1dof');
 save(fullfile(experiment_path,'u_1dof.mat'), 'u_1dof');
+
+disp('Finish!');
