@@ -34,42 +34,45 @@
 
 \section{Introduction}
 aa
-\section{1-dof arm under gravity}
+\section{1R arm under gravity}
 \paragraph{}We start our work by focusing on a simple robot arm (pendulum) under gravity.
 \subsection{Simulation and dynamic model}
-\paragraph{} We have implemented a scene from scratch in V-REP by taking a base, then a revolute joint and a link. We control the joint in position with the built-in PID controller using the default parameters. The arm is in the 0 position at rest. The link is a parallelepiped long 1 $m$ and has a transversal section that is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is $5\cdot1.667\cdot10^{-3}$ $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is ODE, because when we will use the API function simxGetJointForce, this will return the total force/torque applied to the joint along its $z$ axis.
+\paragraph{} We have implemented a scene in V-REP from scratch, by taking a fixed base, a revolute joint and a link. We control the joint in position with the PID controller built-in the joint. The arm is in 0 position at rest. The link is a parallelepiped which length is 1 $m$ and its transversal section is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is $5\cdot1.667\cdot10^{-3}$ $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is Bullet 2.78, because when we will use the API function \textit{simxGetJointForce}, this will return the force or torque applied to the joint motor.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/scene.png}
 \caption{V-REP scene of the 1-dof robot arm}
 \end{figure}
 \FloatBarrier
-The dynamic model is:
-
+The dynamic model of this kind of robot is:
 \[u=gmd \sin(q) + (I+md^2)\ddot{q}= \begin{bmatrix}
 \sin(q) & \ddot{q}
 \end{bmatrix}\begin{bmatrix}
 gmd \\ I +md^2
 \end{bmatrix}\]
-
-Regarding the simulation, we have written a Matlab script in which we first connect to V-REP and then load the scene. In order to generate a trajectory made by the combination of sines and cosines, there is a function called generate\_exciting\_traj() that generates a random exciting trajectory.
-
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.4\textwidth]{images/1-dof/model.jpeg}
+\caption{Robot arm model: $m$ is the mass of the link, $d$ is the position of the center of mass, $I$ is the moment of inertia when rotating around the center of mass}
+\end{figure}
+\FloatBarrier
+Regarding the simulation, we have written a Matlab script in which we first connect to V-REP and then load the scene.\\
+We generate exciting trajectories according to the following formula:
 \[q_j(t) = \sum_{l=1}^{L}{\frac{ a_{l,j}}{ l\omega_f }\sin(l\omega_f t)-\frac{ b_{l,j}}{l\omega_f}\cos(l\omega_f t)+q_{0,j}}\]
-
-\noindent with $L = 5$ and $\omega_f = 0.1\pi$. However, we have started with simpler trajectories generated through the function looping\_splines(),which makes an interpolation of some given positions and instants of time with a cubic splines.
+We implemented a function called generate\_exciting\_traj() that generates a random exciting trajectory using the following parameters: $L = 5$ and $\omega_f = 0.1\pi$.\\
+However, we have started with simpler trajectories generated through the function looping\_splines(),which makes an interpolation of some given positions and instants of time with a cubic splines.
 \\\\
-After generated a trajectory, the simulation starts. In the main loop we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the instant of time.
+After generated a trajectory, the simulation starts. In the main control loop we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the current instant of time.
 \\\\
-We obtain the measured accelerations through differentiation; this led to somewhat noisy values. In order to compensate for this, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35*\pi$. Also the measured torques are noisy, so we apply the same filter.
-\paragraph{}After that, we have all the ingredients to generate the regressor matrix with all the computed values by staking all the $Y$ in a unique matrix. We do the same for the measured torques.
+We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35*\pi$. Also the measured torques are noisy, so we apply the same filter.
+\paragraph{}After that, we have all the ingredients to generate the regressor matrix with all the computed values by staking all the $Y$ in a unique matrix. We do the same for the measured torques obtaining a vector $\overline{\tau}$.
 
 \subsection{Experiments}
-\paragraph{Experiment 1}We have started from a very simple trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$ and then go back to the 0 position in 20 seconds. The function used to generate this trajectory is looping\_splines().
-
+\paragraph{Experiment 1}We have started from a very simple trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$ and then go back to the 0 position in 20 seconds. We interpolated this trajectory using cubic splines.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment1_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and acceleration (filtered)}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
 \end{figure}
 
 \noindent With this trajectory we obtain a torque which is always positive:
@@ -77,15 +80,14 @@ We obtain the measured accelerations through differentiation; this led to somewh
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment1.png}
-\caption{Plot of the reference torque vs measured torque (filtered)}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
 \pagebreak
-\paragraph{Experiment 2}Then, we move to a more complex trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$, then go to $-\frac{\pi}{4}$ and finally return in the 0 position in 20 seconds. The function used to generate this trajectory is looping\_splines() as before.
-
+\paragraph{Experiment 2}Then, we moved to a more complex trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$, then go to $-\frac{\pi}{4}$ and finally return in the 0 position in 20 seconds. As before, we interpolated this trajectory using cubic splines.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment2_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and acceleration (filtered)}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
 \end{figure}
 \FloatBarrier
 
@@ -94,7 +96,7 @@ We obtain the measured accelerations through differentiation; this led to somewh
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment2.png}
-\caption{Plot of the reference torque vs measured torque (filtered)}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
 \pagebreak
 
@@ -104,9 +106,9 @@ We obtain the measured accelerations through differentiation; this led to somewh
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment3_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and acceleration (filtered)}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment3.png}
-\caption{Plot of the reference torque vs measured torque (filtered)}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
 \FloatBarrier
 
@@ -116,9 +118,9 @@ We obtain the measured accelerations through differentiation; this led to somewh
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment4_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and acceleration (filtered)}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment4.png}
-\caption{Plot of the reference torque vs measured torque (filtered)}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
 \FloatBarrier
 
