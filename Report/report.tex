@@ -33,7 +33,11 @@
 \pagebreak
 
 \section{Introduction}
-aa
+\paragraph{}The goal of our work is to perform the dynamic identification of a robot, estimating its dynamic parameters/coefficients by solving an optimization problem.\\
+As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achiving many tasks.\\\\
+In particular we have dealed with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
+For this reason, we developed an algorithm able to estimate torque signs so that we could procede with the identification using well known strategies.\\\\
+In our work, we first studied a simple 1R robot under gravity, then we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.
 \section{1R arm under gravity}
 \paragraph{}We start our work by focusing on a simple robot arm (pendulum) under gravity.
 \subsection{Simulation and dynamic model}
@@ -240,8 +244,10 @@ The norm of the error is 0.6996.
 \end{figure}
 \FloatBarrier
 \section{3R spatial robot}
-aaa
-\subsection{Denavit-Hartenberg}
+After the simple case, we tried to extend this procedure to a more complex robot: a 3R spatial robot.\\
+So, first of all we needed to determine the structure of the robot by defining the Denavit-Hartenberg parameters and to determine the symbolic dynamic model of the robot.
+\subsection{Robot structure}
+\subsubsection*{Denavit-Hartenberg}
 \paragraph{}
 \FloatBarrier
 \begin{table}[!htbp]
@@ -255,99 +261,114 @@ link 2 & 0 & $L_2=0.3$ & $-d_2=-0.09$ & $q_2$\\
 link 3 & 0 & $L_3=0.2$ & 0 & $q_3$\\
 \hline
 \end{tabular}
+\caption{In this table the DH parameters of the robot are reported.}
 \end{table}
-\paragraph{Frame 1}
-\begin{center}
-\includegraphics[width=0.5\textwidth]{images/frame1.png}
-\end{center}
-\paragraph{Frame 2}
-\begin{center}
-\begin{figure}[!htb]
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame2.png}
-   \end{minipage}\hfill
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame2_q2_90.png}
-   \end{minipage}\hfill
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame2_q2_-90.png}
-   \end{minipage}
-   \caption{(a) $q_2$ = 0; (b) $q_2$ = 90 deg; (c) $q_2$ = -90 deg}
-\end{figure} 
-\end{center}
-\paragraph{Frame 3}
-\begin{center}
-\begin{figure}[!htb]
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame3.png}
-   \end{minipage}\hfill
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame3_q2_90.png}
-   \end{minipage}\hfill
-   \begin{minipage}{0.33\textwidth}
-     \centering
-     \includegraphics[width=\linewidth]{images/frame3_q2_-90.png}
-   \end{minipage}
-   \caption{(a) $q_2$ = 0, $q_3$ = 0; (b) $q_2$ = 90 deg, $q_3$ = 0; (c) $q_2$ = -90 deg, $q_3$ = 0}
+\subsubsection*{D-H Frames}
 
-\end{figure} 
-\end{center}
 \begin{center}
 \begin{figure}[!htb]
    \begin{minipage}{0.33\textwidth}
      \centering
-     \includegraphics[width=\linewidth]{images/frame3_q2_0_q3_90.png}
+     \includegraphics[width=\linewidth]{images/3-dof/frame1.png}
    \end{minipage}\hfill
    \begin{minipage}{0.33\textwidth}
      \centering
-     \includegraphics[width=\linewidth]{images/frame3_q2_0_q3_-90.png}
+     \includegraphics[width=\linewidth]{images/3-dof/frame2_q2_90.png}
    \end{minipage}\hfill
    \begin{minipage}{0.33\textwidth}
      \centering
-     \includegraphics[width=\linewidth]{images/frame3_q2_90_q3_-90.png}
+     \includegraphics[width=\linewidth]{images/3-dof/frame3_q2_90.png}
    \end{minipage}
-   \caption{(a) $q_2$ = 0, $q_3$ = 90 deg; (b) $q_2$ = 0 deg, $q_3$ = -90 deg; (c) $q_2$ = 90 deg, $q_3$ = -90 deg}
+   \caption{(a) Frame 1 (b) Frame 2 (c) Frame 3}
 
 \end{figure} 
 \end{center}
 \FloatBarrier
 
-\subsection{Centers of Mass}
+\subsubsection*{Centers of Mass}
+We computed the position of the centers of mass in their respective frames, according to the DH frames we just defined.
+
 \[r_{c1}=\begin{pmatrix}
 0\\
--0.15\\
+-a\\
 0\\
 \end{pmatrix} = \begin{pmatrix}
 0\\
--a\\
+-0.15\\
 0\\
 \end{pmatrix}
 \]
 \[r_{c2}=\begin{pmatrix}
--0.15\\
-0\\
--0.06\\
-\end{pmatrix} = \begin{pmatrix}
 -b\\
 0\\
 -c\\
+\end{pmatrix} = \begin{pmatrix}
+-0.15\\
+0\\
+-0.06\\
 \end{pmatrix}
 \]
 \[r_{c3}=\begin{pmatrix}
--0.10\\
-0\\
-0\\
-\end{pmatrix}=\begin{pmatrix}
 -d\\
+0\\
+0\\
+\end{pmatrix} = \begin{pmatrix}
+-0.10\\
 0\\
 0\\
 \end{pmatrix}
 \]
-\[a=0.15;\qquad b=0.15;\qquad c=0.06;\qquad d=0.10 
-\]
+%\[a=0.15;\qquad b=0.15;\qquad c=0.06;\qquad d=0.10 
+%\]
+\subsubsection*{Dynamic model}
+To compute the dynamic model of the robot we followed these steps:
+\begin{itemize}
+\item We implemented the moving frame algorithm in order to obtain the linear and angular velocities of the frames origin;
+\item We computed the kinetic energy expressing the inertial tensors with respect to the centers of mass;
+\item From the kinetic energy, we computed the inertia matrix and the Coriolis and centrifugal terms of the model;
+\item After that we computed the potential energy, using the centers of mass expressed with respect to the base frame and we computed the gravity vector.
+\end{itemize}
+Once we obtained the dynamic model of the robot, we found a minimal representation of the model. The dynamic coefficients we found are given by:
+
+\[\pi_1= I_{1,yy} + m_2 (c+ d_2)^2 + m_3 d_2^2\]
+\[\pi_2 = m_2(L_2 -b)^2 + m_3 L_2^2 + I_{2,yy}\]
+\[\pi_3 = I_{2,xx}\]
+\[\pi_4 = I_{3,yy} + m_3(L_3 - d)^2\]
+\[\pi_5 = I_{3,xx}\]
+\[\pi_6 = m_3(L_3 -d)L_2\]
+\[\pi_7 = I_{2,zz} + m_2(L_2 - b)^2 + I_{3,zz} + m_3(L_2^2 + (L_3 - d)^2 )\]
+\[\pi_8 = m_3(L_3 -d)^2 + I_{3,zz}\]
+\[\pi_9 = m_2(L_2 - b)(c+ d_2) + m_3 L_2 d_2\]
+\[\pi_{10} = m_3(L_3 - d)d_2\]
+\[\pi_{11} = g_0 m_2 (L_2 - b)\]
+\[\pi_{12} = g_0 m_3 (L_3 - d)\]
+\[\pi_{13} = g_0 m_3 L_2\]
+\subsection{Simulation}
+We created a new V-REP scene from scratch, and we represented the robot arm we just discussed.
+\FloatBarrier
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{images/3-dof/scene.png}
+\caption{3R Robot-arm V-REP scene}
+\end{figure}
+\FloatBarrier
+For the simulation we used the following values for masses and inertia tensors.
+\[m_1 = 10 \;kg,\quad I_{xx,1} = 7.708\cdot 10^{-2}\;kg\cdot m^2,\quad I_{yy,1} = 4.167 \cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,1} = 7.708\cdot 10^{-2}\;kg\cdot m^2\]
+\[ m_2 = 1.125\;kg,\quad I_{xx,2} = 4.167 \cdot 1.125\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,2} = 7.708\cdot 1.125\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,2} = 7.708\cdot 1.125\cdot 10^{-3}\;kg\cdot m^2\]
+\[m_3 = 0.75\;kg,\quad I_{xx,3} = 4.167\cdot 0.75\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,3} = 3.542\cdot 0.75\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,3} = 3.542\cdot 0.75\cdot 10^{-3}\;kg\cdot m^2\]
+The first and the second links are two parallelepipeds which length is 0.3 $m$ and their transversal section is a square with side equal to 0.05 $m$, while the third link is 0.2 $m$ long and has a transversal section that is a square with side equal to 0.05 $m$.\\\\
+As reguards the simulation, we used the same approach of the 1R robot, but of course this time we had to deal with 3 links so we had 3 joint positions and 3 joint torques at each robot update.\\\\(vedi velocità)\\\\
+We used Bullet2.78 as physics engine as we are interested in torque applied to the joint motor, and using this engine is the only way to get directly this information from the V-REP remote API.
+\subsection{Experiments}
+\subsection{PBRP algorithm}
+aggiunti vincoli (es. traccia, ...)
+\subsection{Tree of solutions}
+vedi numeri iterazioni
+\subsection{Results}
+\section{Conclusions}
+
+
+
+
+
 \end{document}
