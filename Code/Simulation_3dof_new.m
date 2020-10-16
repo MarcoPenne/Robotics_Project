@@ -16,7 +16,7 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
 if (clientID>-1)
     disp('Connected to remote API server');
-    [returnCode]=sim.simxLoadScene(clientID,'scenes/3-dof_position_control_ode.ttt',1,sim.simx_opmode_blocking)
+    [returnCode]=sim.simxLoadScene(clientID,'scenes/3-dof_position_control.ttt',1,sim.simx_opmode_blocking)
     display(returnCode);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
@@ -49,7 +49,7 @@ end
  
 [position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory1');
 [position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory2');
-[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory3');
+[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory1');
 
 time_tmp = [time1; time2; time3];
 position_tmp = [position1; position2; position3];
@@ -158,16 +158,16 @@ filtered_vel(2, :) = filtfilt(filt, estimated_velocity(2,:));
 filtered_vel(3, :) = filtfilt(filt, estimated_velocity(3,:));
 
 subplot(3,3,4);
-plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
-legend ("reference vel j1", "estimated velocity j1", "filtered velocity j1")
+plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
+legend ("reference vel j1", "filtered velocity j1")
 
 subplot(3,3,5);
-plot(time_axis(1, 1:i-1), reference_vel(2, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(2, 1:i-1), time_axis(1, 1:i-1), filtered_vel(2, 1:i-1));
-legend ("reference vel j2", "estimated velocity j2", "filtered velocity j2")
+plot(time_axis(1, 1:i-1), reference_vel(2, 1:i-1), time_axis(1, 1:i-1), filtered_vel(2, 1:i-1));
+legend ("reference vel j2", "filtered velocity j2")
 
 subplot(3,3,6);
-plot(time_axis(1, 1:i-1), reference_vel(3, 1:i-1), time_axis(1, 1:i-1), estimated_velocity(3, 1:i-1), time_axis(1, 1:i-1), filtered_vel(3, 1:i-1));
-legend ("reference vel j3", "estimated velocity j3", "filtered velocity j3");
+plot(time_axis(1, 1:i-1), reference_vel(3, 1:i-1), time_axis(1, 1:i-1), filtered_vel(3, 1:i-1));
+legend ("reference vel j3", "filtered velocity j3");
 
 estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(2, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(3, 1:i-1),frame_period),frame_period)];
 
@@ -177,16 +177,16 @@ filtered_acc(2, :) = filtfilt(filt, estimated_acceleration(2,:));
 filtered_acc(3, :) = filtfilt(filt, estimated_acceleration(3,:));
 
 subplot(3,3,7);
-plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(1, 1:i-1), time_axis(1, 1:i-1), filtered_acc(1, 1:i-1));
-legend ("reference acc j1", "estimated acc j1", "filtered acceleration j1")
+plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), filtered_acc(1, 1:i-1));
+legend ("reference acc j1", "filtered acceleration j1")
 
 subplot(3,3,8);
-plot(time_axis(1, 1:i-1), reference_acc(2, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(2, 1:i-1), time_axis(1, 1:i-1), filtered_acc(2, 1:i-1));
-legend ("reference acc j2", "estimated acc j2", "filtered acceleration j2")
+plot(time_axis(1, 1:i-1), reference_acc(2, 1:i-1), time_axis(1, 1:i-1), filtered_acc(2, 1:i-1));
+legend ("reference acc j2", "filtered acceleration j2")
 
 subplot(3,3,9);
-plot(time_axis(1, 1:i-1), reference_acc(3, 1:i-1), time_axis(1, 1:i-1), estimated_acceleration(3, 1:i-1), time_axis(1, 1:i-1), filtered_acc(3, 1:i-1));
-legend ("reference vel j3", "estimated acc j3", "filtered acceleration j3");
+plot(time_axis(1, 1:i-1), reference_acc(3, 1:i-1), time_axis(1, 1:i-1), filtered_acc(3, 1:i-1));
+legend ("reference vel j3", "filtered acceleration j3");
 
 for j=1:i-1
     Y = Y_matrix(reference_pos(1, j), reference_pos(2, j), reference_pos(3, j), reference_vel(1, j), reference_vel(2, j), reference_vel(3, j), reference_acc(1, j), reference_acc(2, j), reference_acc(3, j));
@@ -194,23 +194,27 @@ for j=1:i-1
     reference_torque(:, j) = Y*a;
 end
 
+FC_HIGH2 = 0.35*pi;  % Hz, used in low-pass and band-pass filters
+
+filt2 = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH2, 'SampleRate', 1/frame_period);
+
 filtered_torque = zeros(3, length(measured_torque));
-filtered_torque(1, :) = filtfilt(filt, measured_torque(1,:));
+filtered_torque(1, :) = filtfilt(filt2, measured_torque(1,:));
 filtered_torque(2, :) = filtfilt(filt, measured_torque(2,:));
 filtered_torque(3, :) = filtfilt(filt, measured_torque(3,:));
 
 figure('Name', 'Torques');
 subplot(3,1,1);
-plot(time_axis(1, 1:i-1), measured_torque(1, 1:i-1), time_axis(1, 1:i-1), reference_torque(1, 1:i-1), time_axis(1, 1:i-1), filtered_torque(1, 1:i-1));
-legend ("measured torque j1", "reference torque1", "filtered torque1")
+plot(time_axis(1, 1:i-1), reference_torque(1, 1:i-1), time_axis(1, 1:i-1), filtered_torque(1, 1:i-1));
+legend ("reference torque1", "filtered torque1")
 
 subplot(3,1,2);
-plot(time_axis(1, 1:i-1), measured_torque(2, 1:i-1), time_axis(1, 1:i-1), reference_torque(2, 1:i-1), time_axis(1, 1:i-1), filtered_torque(2, 1:i-1));
-legend ("measured torque j2", "reference torque2", "filtered torque2")
+plot(time_axis(1, 1:i-1), reference_torque(2, 1:i-1), time_axis(1, 1:i-1), filtered_torque(2, 1:i-1));
+legend ("reference torque2", "filtered torque2")
 
 subplot(3,1,3);
-plot(time_axis(1, 1:i-1), measured_torque(3, 1:i-1), time_axis(1, 1:i-1), reference_torque(3, 1:i-1), time_axis(1, 1:i-1), filtered_torque(3, 1:i-1));
-legend ("measured torque j3", "reference torque3", "filtered torque3");
+plot(time_axis(1, 1:i-1), reference_torque(3, 1:i-1), time_axis(1, 1:i-1), filtered_torque(3, 1:i-1));
+legend ("reference torque3", "filtered torque3");
 
 Y_stack = zeros((i-1)*3,13);
 u_stack = zeros((i-1)*3,1);
@@ -223,6 +227,6 @@ end
 coefficients = pinv(Y_stack)*u_stack;
 error = norm(coefficients-a)
 
-experiment_path = 'data/3-dof/experiment6';
+experiment_path = 'data/3-dof/new_experiment3';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
