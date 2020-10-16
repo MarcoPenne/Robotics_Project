@@ -233,7 +233,6 @@ pythontex-files-*/
 *.xyd
 
 # endfloat
-*.ttt
 *.fff
 
 # Latexian
