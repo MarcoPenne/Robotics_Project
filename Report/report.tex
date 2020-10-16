@@ -361,9 +361,35 @@ As reguards the simulation, we used the same approach of the 1R robot, but of co
 We used Bullet2.78 as physics engine as we are interested in torque applied to the joint motor, and using this engine is the only way to get directly this information from the V-REP remote API.
 \subsection{Experiments}
 \subsection{PBRP algorithm}
-aggiunti vincoli (es. traccia, ...)
+We have extended the procedure for the 1R robot to the 3R case. Since we have more than one joint, we need to add some constraints; this is the complete algorithm:
+\FloatBarrier
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{images/3-dof/algorithm.png}
+\caption{PBRP algorithm}
+\end{figure}
+\FloatBarrier
+In particular, in addition to the lower and upper bounds,  for each link $l_i$ the following triangle inequalities regarding the inertias  must be satisfied:
+
+\[\begin{cases}
+\overline{I}_{i,x}+\overline{I}_{i,y} > \overline{I}_{i,z} \\
+\overline{I}_{i,z}+\overline{I}_{i,y} > \overline{I}_{i,x} \\
+\overline{I}_{i,x}+\overline{I}_{i,z} > \overline{I}_{i,y}
+\end{cases}\]
+
+These inequalities can be rewritten as:
+
+\[\frac{tr(I_{l_i})}{2}-\lambda_{max}(I_{l_i})>0\]
+
+Moeover, the total sum of the link masses must be in a given range, that is:
+
+\[m_{rob,min}\le \sum_i{m_i} \le m_{rob,max}\]
+
+The search algorithm is simulated annealing as before and we run the algorithm 3 times.
 \subsection{Tree of solutions}
-vedi numeri iterazioni
+The tree algorithm is a simple extension of the 1R case; we highlight the fact that segments of different links are put and examinated together in random order, so that we do not give priority to any link or segment. The algorithm used to solve the optimization problems of the tree is pattern search like in the previous case.
+\\\\
+After the tree has been built, we have the sequence of most likely signs that we apply to the absolute torques. Finally, we run the PBRP algorithm to the torques with the estimated signs for 3 times by using simulated annealing as search algorithm.
 \subsection{Results}
 \section{Conclusions}
 
