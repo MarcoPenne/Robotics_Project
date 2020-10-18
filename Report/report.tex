@@ -19,8 +19,6 @@
 \definecolor{myorange}{RGB}{219, 146, 0}
 \newcommand{\centered}[1]{\begin{tabular}{l} #1 \end{tabular}}
 
-
-
 % \sectionfont{\centering}
 \usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm]{geometry}
 \title{\textbf{Robotics II} \\ \large{\textbf{Final Project}}}
@@ -35,13 +33,13 @@
 \section{Introduction}
 \paragraph{}The goal of our work is to perform the dynamic identification of a robot, estimating its dynamic parameters/coefficients by solving an optimization problem.\\
 As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achiving many tasks.\\\\
-In particular we have dealed with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
-For this reason, we developed an algorithm able to estimate torque signs so that we could procede with the identification using well known strategies.\\\\
-In our work, we first studied a simple 1R robot under gravity, then we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.
+In particular, we have dealed with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact, when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
+For this reason, we have developed an algorithm able to estimate torque signs so that we could procede with the identification using well known strategies.
+\paragraph{}In our work, we first studied a simple 1R robot under gravity; then, we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.
 \section{1R arm under gravity}
 \paragraph{}We start our work by focusing on a simple robot arm (pendulum) under gravity.
 \subsection{Simulation and dynamic model}
-\paragraph{} We have implemented a scene in V-REP from scratch, by taking a fixed base, a revolute joint and a link. We control the joint in position with the PID controller built-in the joint. The arm is in 0 position at rest. The link is a parallelepiped which length is 1 $m$ and its transversal section is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is $5\cdot1.667\cdot10^{-3}$ $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is Bullet 2.78, because when we will use the API function \textit{simxGetJointForce}, this will return the force or torque applied to the joint motor.
+\paragraph{} We have implemented a scene in V-REP from scratch, by taking a fixed base, a revolute joint and a link. We control the joint in position with the PID controller built in the joint. The arm is in 0 position at rest. The link is a parallelepiped which length is 1 $m$ and its transversal section is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is $5\cdot1.667\cdot10^{-3}$ $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is Bullet 2.78, because when we will use the API function \textit{simxGetJointForce}, this will return the force or torque applied to the joint motor.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/scene.png}
@@ -63,50 +61,19 @@ gmd \\ I +md^2
 Regarding the simulation, we have written a Matlab script in which we first connect to V-REP and then load the scene.\\
 We generate exciting trajectories according to the following formula:
 \[q_j(t) = \sum_{l=1}^{L}{\frac{ a_{l,j}}{ l\omega_f }\sin(l\omega_f t)-\frac{ b_{l,j}}{l\omega_f}\cos(l\omega_f t)+q_{0,j}}\]
-We implemented a function called generate\_exciting\_traj() that generates a random exciting trajectory using the following parameters: $L = 5$ and $\omega_f = 0.1\pi$.\\
-However, we have started with simpler trajectories generated through the function looping\_splines(),which makes an interpolation of some given positions and instants of time with a cubic splines.
+We implemented a function called generate\_exciting\_traj() that generates a random exciting trajectory using the following parameters: $L = 5$ and $\omega_f = 0.1\pi$.
 \\\\
 After generated a trajectory, the simulation starts. In the main control loop we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the current instant of time.
 \\\\
-We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35*\pi$. Also the measured torques are noisy, so we apply the same filter.
+We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35\cdot\pi$. Also the measured torques are noisy, so we apply the same filter.
 \paragraph{}After that, we have all the ingredients to generate the regressor matrix with all the computed values by staking all the $Y$ in a unique matrix. We do the same for the measured torques obtaining a vector $\overline{\tau}$.
 
 \subsection{Experiments}
-\paragraph{Experiment 1}We have started from a very simple trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$ and then go back to the 0 position in 20 seconds. We interpolated this trajectory using cubic splines.
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment1_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
-\end{figure}
-
-\noindent With this trajectory we obtain a torque which is always positive:
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment1.png}
-\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
-\end{figure}
-\pagebreak
-\paragraph{Experiment 2}Then, we moved to a more complex trajectory according to which the robot has to move from the 0 position to $\frac{\pi}{4}$, then go to $-\frac{\pi}{4}$ and finally return in the 0 position in 20 seconds. As before, we interpolated this trajectory using cubic splines.
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment2_traj.png}
-\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
-\end{figure}
-\FloatBarrier
-
-\noindent With this trajectory we obtain a torque which is positive in the first half wave and negative in the second half wave:
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment2.png}
-\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
-\end{figure}
+\paragraph{}We have generated four trajectories made by the combination of sines and cosines through the generate\_exciting\_traj() function. All these trajectories are repeated 5 consecutive times but we take only the 3 intermediate periods. The results are reported below.
 \pagebreak
 
-\paragraph{Experiment 3 and 4}Finally, we have generated two trajectories made by the combination of sines and cosines through the generate\_exciting\_traj() function. Both these trajectories are repeated 3 consecutive times. The results are reported below.
-\paragraph{}Trajectory one:
-
+\paragraph{Experiment 1}
+We report the results of the simulation with the first trajectory generated:
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment3_traj.png}
@@ -114,11 +81,10 @@ We obtain the measured accelerations through numerical differentiation; this lea
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment3.png}
 \caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
-\FloatBarrier
-
 \pagebreak
-\paragraph{}Trajectory two:
 
+\paragraph{Experiment 2}
+We report the results of the simulation with the second trajectory generated:
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment4_traj.png}
@@ -126,7 +92,29 @@ We obtain the measured accelerations through numerical differentiation; this lea
 \includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment4.png}
 \caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
 \end{figure}
-\FloatBarrier
+\pagebreak
+
+\paragraph{Experiment 3}
+We report the results of the simulation with the third trajectory generated:
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment5_traj.png}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
+\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment5.png}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
+\end{figure}
+\pagebreak
+
+\paragraph{Experiment 4}
+We report the results of the simulation with the fourth trajectory generated:
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment6_traj.png}
+\caption{Plot of the reference position, velocity and acceleration vs measured position, velocity and (filtered) acceleration}
+\includegraphics[width=0.7\textwidth]{images/1-dof/new_experiment6.png}
+\caption{Plot of the reference torque computed using the dynamic model and the reference position, velocity and acceleration vs (filtered) measured torque}
+\end{figure}
+\pagebreak
 
 \subsection{PBRP algorithm}
 \paragraph{}If we had torque signs, we would apply directly the Penalty-Based Parameters Retrivial (PBRP) algorithm. The aim of this algorithm is to get a physically consistent set of parameters; in order to do so, we need to solve the following optimization problem:
@@ -155,10 +143,10 @@ In general, it is possible to provide a set of lower and upper bounds for the dy
 & $m$ & $d$ & $I$\\
 \hline
 Ground truth & 5 & 0.5 & 0.4208\\
-Experiment 1 & 9.7053 & 0.2577 & 0.4116\\
-Experiment 2 & 9.9157 & 0.2519 & 0\\
-Experiment 3 & 6.9846 & 0.3577 & 0.0825\\
-Experiment 4 & 6.3661 & 0.3915 & 0\\
+Experiment 1 & 6.1966 & 0.4035 & $3.9016\cdot 10^{-4}$\\
+Experiment 2 & 7.1361 & 0.3488 & 0.0864\\
+Experiment 3 & 7.3009 & 0.3428 & 0.1789\\
+Experiment 4 & 6.1980 & 0.4036 & 0\\
 \hline
 \end{tabular}
 \caption{Optimal solutions}
@@ -187,62 +175,69 @@ The ground values of the dynamic coefficients are:
 \[\begin{bmatrix}
 \pi_1  \\ \pi_2 
 \end{bmatrix}=\begin{bmatrix}
-24.5312 \\ 1.0559
+24.5288 \\ 1.0093
 \end{bmatrix}\]
 
-The norm of the error is 0.6149.
+The norm of the error is 0.6615.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment1.png}
-\caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
-\end{figure}
-\FloatBarrier
-\paragraph{Experiment 2} The estimated dynamic coefficients without torque signs are:
-
-\[\begin{bmatrix}
-\pi_1  \\ \pi_2 
-\end{bmatrix}=\begin{bmatrix}
-24.4990 \\ 0.6290
-\end{bmatrix}\]
-
-The norm of the error is 1.0422.
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment2.png}
-\caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
-\end{figure}
-\FloatBarrier
-\paragraph{Experiment 3} The estimated dynamic coefficients without torque signs are:
-
-\[\begin{bmatrix}
-\pi_1  \\ \pi_2 
-\end{bmatrix}=\begin{bmatrix}
-24.5069 \\ 0.9760
-\end{bmatrix}\]
-
-The norm of the error is 0.6950.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment3.png}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
-\paragraph{Experiment 4} The estimated dynamic coefficients without torque signs are:
+
+\paragraph{Experiment 2} The estimated dynamic coefficients without torque signs are:
 
 \[\begin{bmatrix}
 \pi_1  \\ \pi_2 
 \end{bmatrix}=\begin{bmatrix}
-24.4473 \\ 0.9756
+24.4203 \\ 0.9547
 \end{bmatrix}\]
 
-The norm of the error is 0.6996.
+The norm of the error is 0.7237.
+
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment4.png}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
+
+\paragraph{Experiment 3} The estimated dynamic coefficients without torque signs are:
+
+\[\begin{bmatrix}
+\pi_1  \\ \pi_2 
+\end{bmatrix}=\begin{bmatrix}
+24.5510 \\ 1.0367
+\end{bmatrix}\]
+
+The norm of the error is 0.6346.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment5.png}
+\caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
+\end{figure}
+\FloatBarrier
+
+\paragraph{Experiment 4} The estimated dynamic coefficients without torque signs are:
+
+\[\begin{bmatrix}
+\pi_1  \\ \pi_2 
+\end{bmatrix}=\begin{bmatrix}
+24.5375 \\ 1.0094
+\end{bmatrix}\]
+
+The norm of the error is 0.6616.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{images/1-dof/results_new_experiment6.png}
+\caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
+\end{figure}
+\FloatBarrier
+
 \section{3R spatial robot}
 After the simple case, we tried to extend this procedure to a more complex robot: a 3R spatial robot.\\
 So, first of all we needed to determine the structure of the robot by defining the Denavit-Hartenberg parameters and to determine the symbolic dynamic model of the robot.
@@ -392,8 +387,6 @@ The tree algorithm is a simple extension of the 1R case; we highlight the fact t
 After the tree has been built, we have the sequence of most likely signs that we apply to the absolute torques. Finally, we run the PBRP algorithm to the torques with the estimated signs for 3 times by using simulated annealing as search algorithm.
 \subsection{Results}
 \section{Conclusions}
-
-
 
 
 
