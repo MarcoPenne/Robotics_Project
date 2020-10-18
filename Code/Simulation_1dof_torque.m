@@ -34,7 +34,7 @@ end
 % 
 % period = 20;
 
-trajectory_path = 'data/1-dof/trajectory3';
+trajectory_path = 'data/1-dof/trajectory5';
 [position, velocity, acceleration, time] = load_trajectory(trajectory_path);
 [position, velocity, acceleration] = looping_splines(position, time);
 
