@@ -9,6 +9,8 @@ elseif isunix
   addpath("coppelia_files/linux")
 end
 
+%%
+
 sim=remApi('remoteApi');
 
 sim.simxFinish(-1); % just in case, close all opened connections
@@ -35,6 +37,7 @@ else
     disp('Failed connecting to remote API server');
 end
  
+%%
 % [x1, y1, z1] = looping_splines([0 pi/2 -pi/2 pi/2 0],[0 5 10 15 20]);
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
@@ -47,9 +50,9 @@ end
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
  
-[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory1');
-[position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory2');
-[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory1');
+[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory4');
+[position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory5');
+[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory6');
 
 time_tmp = [time1; time2; time3];
 position_tmp = [position1; position2; position3];
@@ -76,7 +79,9 @@ for i=1:3
     subplot(3,3,i+6);
     fplot(acceleration(i), [0 period]);
 end
-    
+   
+%%
+
 sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot);
 
 measured_pos = zeros(3, 500000);
@@ -84,14 +89,28 @@ measured_vel = zeros(3, 500000);
 reference_pos = zeros(3, 500000);
 measured_torque = zeros(3, 500000);
 time_axis = zeros(1, 500000);
+
+started = false;
+finished = false;
+starting_i = 1;
+finishing_i = 1;
 pause(5);
+
 
 start = datetime('now');
 
 i = 1;
-while seconds(datetime('now')-start) < period * 3
+while seconds(datetime('now')-start) < period * 5
     
     t = seconds(datetime('now')-start);
+    if t>period && ~started
+       starting_i = i;
+       started = true;
+    end
+    if t>period*4 && ~finished
+        finishing_i = i-1;
+        finished = true;
+    end
     time_axis(i) = t;
     
     [returnCode,joint_position1]=sim.simxGetJointPosition(clientID,joints(1),sim.simx_opmode_streaming);
@@ -131,18 +150,19 @@ while seconds(datetime('now')-start) < period * 3
 end
 
 sim.simxStopSimulation(clientID, sim.simx_opmode_oneshot);
+%%
 
 figure('Name', 'Experiments');
 subplot(3,3,1);
-plot(time_axis(1, 1:i-1), reference_pos(1, 1:i-1), time_axis(1, 1:i-1), measured_pos(1, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_pos(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), measured_pos(1, starting_i:finishing_i));
 legend ("reference pos j1", "measured pos j1")
 
 subplot(3,3,2);
-plot(time_axis(1, 1:i-1), reference_pos(2, 1:i-1), time_axis(1, 1:i-1), measured_pos(2, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_pos(2, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), measured_pos(2, starting_i:finishing_i));
 legend ("reference pos j2", "measured pos j2")
 
 subplot(3,3,3);
-plot(time_axis(1, 1:i-1), reference_pos(3, 1:i-1), time_axis(1, 1:i-1), measured_pos(3, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_pos(3, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), measured_pos(3, starting_i:finishing_i));
 legend ("reference pos j3", "measured pos j3")
 
 ORDER = 16;
@@ -158,34 +178,38 @@ filtered_vel(2, :) = filtfilt(filt, estimated_velocity(2,:));
 filtered_vel(3, :) = filtfilt(filt, estimated_velocity(3,:));
 
 subplot(3,3,4);
-plot(time_axis(1, 1:i-1), reference_vel(1, 1:i-1), time_axis(1, 1:i-1), filtered_vel(1, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_vel(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_vel(1, starting_i:finishing_i));
 legend ("reference vel j1", "filtered velocity j1")
 
 subplot(3,3,5);
-plot(time_axis(1, 1:i-1), reference_vel(2, 1:i-1), time_axis(1, 1:i-1), filtered_vel(2, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_vel(2, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_vel(2, starting_i:finishing_i));
 legend ("reference vel j2", "filtered velocity j2")
 
 subplot(3,3,6);
-plot(time_axis(1, 1:i-1), reference_vel(3, 1:i-1), time_axis(1, 1:i-1), filtered_vel(3, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_vel(3, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_vel(3, starting_i:finishing_i));
 legend ("reference vel j3", "filtered velocity j3");
+
+FC_HIGH = 0.3*pi;  % Hz, used in low-pass and band-pass filters
+
+filt_acc = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH, 'SampleRate', 1/frame_period);
 
 estimated_acceleration = [gradient(gradient(measured_pos(1, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(2, 1:i-1),frame_period),frame_period); gradient(gradient(measured_pos(3, 1:i-1),frame_period),frame_period)];
 
 filtered_acc = zeros(3, i-1);
-filtered_acc(1, :) = filtfilt(filt, estimated_acceleration(1,:));
-filtered_acc(2, :) = filtfilt(filt, estimated_acceleration(2,:));
-filtered_acc(3, :) = filtfilt(filt, estimated_acceleration(3,:));
+filtered_acc(1, :) = filtfilt(filt_acc, estimated_acceleration(1,:));
+filtered_acc(2, :) = filtfilt(filt_acc, estimated_acceleration(2,:));
+filtered_acc(3, :) = filtfilt(filt_acc, estimated_acceleration(3,:));
 
 subplot(3,3,7);
-plot(time_axis(1, 1:i-1), reference_acc(1, 1:i-1), time_axis(1, 1:i-1), filtered_acc(1, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_acc(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_acc(1, starting_i:finishing_i));
 legend ("reference acc j1", "filtered acceleration j1")
 
 subplot(3,3,8);
-plot(time_axis(1, 1:i-1), reference_acc(2, 1:i-1), time_axis(1, 1:i-1), filtered_acc(2, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_acc(2, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_acc(2, starting_i:finishing_i));
 legend ("reference acc j2", "filtered acceleration j2")
 
 subplot(3,3,9);
-plot(time_axis(1, 1:i-1), reference_acc(3, 1:i-1), time_axis(1, 1:i-1), filtered_acc(3, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_acc(3, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_acc(3, starting_i:finishing_i));
 legend ("reference vel j3", "filtered acceleration j3");
 
 for j=1:i-1
@@ -194,7 +218,7 @@ for j=1:i-1
     reference_torque(:, j) = Y*a;
 end
 
-FC_HIGH2 = 0.35*pi;  % Hz, used in low-pass and band-pass filters
+FC_HIGH2 = 0.25*pi;  % Hz, used in low-pass and band-pass filters
 
 filt2 = designfilt('lowpassiir', 'FilterOrder', ORDER, 'HalfPowerFrequency', FC_HIGH2, 'SampleRate', 1/frame_period);
 
@@ -205,28 +229,30 @@ filtered_torque(3, :) = filtfilt(filt, measured_torque(3,:));
 
 figure('Name', 'Torques');
 subplot(3,1,1);
-plot(time_axis(1, 1:i-1), reference_torque(1, 1:i-1), time_axis(1, 1:i-1), filtered_torque(1, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_torque(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_torque(1, starting_i:finishing_i));
 legend ("reference torque1", "filtered torque1")
 
 subplot(3,1,2);
-plot(time_axis(1, 1:i-1), reference_torque(2, 1:i-1), time_axis(1, 1:i-1), filtered_torque(2, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_torque(2, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_torque(2, starting_i:finishing_i));
 legend ("reference torque2", "filtered torque2")
 
 subplot(3,1,3);
-plot(time_axis(1, 1:i-1), reference_torque(3, 1:i-1), time_axis(1, 1:i-1), filtered_torque(3, 1:i-1));
+plot(time_axis(1, starting_i:finishing_i), reference_torque(3, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_torque(3, starting_i:finishing_i));
 legend ("reference torque3", "filtered torque3");
 
-Y_stack = zeros((i-1)*3,13);
-u_stack = zeros((i-1)*3,1);
+Y_stack = zeros((finishing_i-starting_i+1)*3,13);
+u_stack = zeros((finishing_i-starting_i+1)*3,1);
 
-for k=1:(i-1)
-    Y_stack(k*3-2:k*3,:) = Y_matrix(measured_pos(1,k),measured_pos(2,k),measured_pos(3,k),filtered_vel(1,k),filtered_vel(2,k),filtered_vel(3,k),filtered_acc(1,k),filtered_acc(2,k),filtered_acc(3,k));
-    u_stack(k*3-2:k*3,:) = filtered_torque(:,k);
+j = 1;
+for k=starting_i:finishing_i
+    Y_stack(j*3-2:j*3,:) = Y_matrix(measured_pos(1,k),measured_pos(2,k),measured_pos(3,k),filtered_vel(1,k),filtered_vel(2,k),filtered_vel(3,k),filtered_acc(1,k),filtered_acc(2,k),filtered_acc(3,k));
+    u_stack(j*3-2:j*3,:) = filtered_torque(:,k);
+    j = j+1;
 end
 
 coefficients = pinv(Y_stack)*u_stack;
 error = norm(coefficients-a)
 
-experiment_path = 'data/3-dof/new_experiment3';
+experiment_path = 'data/3-dof/new_experiment6';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
