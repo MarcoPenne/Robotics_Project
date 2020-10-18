@@ -39,7 +39,7 @@ For this reason, we have developed an algorithm able to estimate torque signs so
 \section{1R arm under gravity}
 \paragraph{}We start our work by focusing on a simple robot arm (pendulum) under gravity.
 \subsection{Simulation and dynamic model}
-\paragraph{} We have implemented a scene in V-REP from scratch, by taking a fixed base, a revolute joint and a link. We control the joint in position with the PID controller built in the joint. The arm is in 0 position at rest. The link is a parallelepiped which length is 1 $m$ and its transversal section is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is $5\cdot1.667\cdot10^{-3}$ $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is Bullet 2.78, because when we will use the API function \textit{simxGetJointForce}, this will return the force or torque applied to the joint motor.
+\paragraph{} We have implemented a scene in V-REP from scratch, by taking a fixed base, a revolute joint and a link. We control the joint in position with the PID controller built in the joint. The arm is in 0 position at rest. The link is a parallelepiped which length is 1 $m$ and its transversal section is a square with side equal to 0.1 $m$. The mass of the link is 5 $kg$ and the principal moment of inertia is 0.4208 $kg\cdot m^2$. Since the arm has a uniform density, the center of mass is located at the center of the link, so it is 0.5 $m$ from the top. The physics engine used is Bullet 2.78, because when we will use the API function \textit{simxGetJointForce}, this will return the force or torque applied to the joint motor.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{images/1-dof/scene.png}
@@ -65,11 +65,11 @@ We implemented a function called generate\_exciting\_traj() that generates a ran
 \\\\
 After generated a trajectory, the simulation starts. In the main control loop we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the current instant of time.
 \\\\
-We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35\cdot\pi$. Also the measured torques are noisy, so we apply the same filter.
+We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35\pi$. Also the measured torques are noisy, so we apply the same filter.
 \paragraph{}After that, we have all the ingredients to generate the regressor matrix with all the computed values by staking all the $Y$ in a unique matrix. We do the same for the measured torques obtaining a vector $\overline{\tau}$.
 
 \subsection{Experiments}
-\paragraph{}We have generated four trajectories made by the combination of sines and cosines through the generate\_exciting\_traj() function. All these trajectories are repeated 5 consecutive times but we take only the 3 intermediate periods. The results are reported below.
+\paragraph{}We have generated four trajectories made by the combination of sines and cosines through the generate\_exciting\_traj() function. \\ All these trajectories are repeated 5 consecutive times but we take only the 3 intermediate periods. The results are reported below.
 \pagebreak
 
 \paragraph{Experiment 1}
@@ -349,8 +349,8 @@ We created a new V-REP scene from scratch, and we represented the robot arm we j
 \FloatBarrier
 For the simulation we used the following values for masses and inertia tensors.
 \[m_1 = 10 \;kg,\quad I_{xx,1} = 7.708\cdot 10^{-2}\;kg\cdot m^2,\quad I_{yy,1} = 4.167 \cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,1} = 7.708\cdot 10^{-2}\;kg\cdot m^2\]
-\[ m_2 = 1.125\;kg,\quad I_{xx,2} = 4.167 \cdot 1.125\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,2} = 7.708\cdot 1.125\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,2} = 7.708\cdot 1.125\cdot 10^{-3}\;kg\cdot m^2\]
-\[m_3 = 0.75\;kg,\quad I_{xx,3} = 4.167\cdot 0.75\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,3} = 3.542\cdot 0.75\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,3} = 3.542\cdot 0.75\cdot 10^{-3}\;kg\cdot m^2\]
+\[ m_2 = 1.125\;kg,\quad I_{xx,2} = 4.6879\cdot10^{-4}\;kg\cdot m^2,\quad I_{yy,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2\]
+\[m_3 = 0.75\;kg,\quad I_{xx,3} = 3.1252\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2\]
 The first and the second links are two parallelepipeds which length is 0.3 $m$ and their transversal section is a square with side equal to 0.05 $m$, while the third link is 0.2 $m$ long and has a transversal section that is a square with side equal to 0.05 $m$.\\\\
 As reguards the simulation, we used the same approach of the 1R robot, but of course this time we had to deal with 3 links so we had 3 joint positions and 3 joint torques at each robot update.\\\\(vedi velocità)\\\\
 We used Bullet2.78 as physics engine as we are interested in torque applied to the joint motor, and using this engine is the only way to get directly this information from the V-REP remote API.
