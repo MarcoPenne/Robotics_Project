@@ -50,9 +50,9 @@ end
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
  
-[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory4');
+[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory3');
 [position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory5');
-[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory6');
+[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory4');
 
 time_tmp = [time1; time2; time3];
 position_tmp = [position1; position2; position3];
@@ -253,6 +253,6 @@ end
 coefficients = pinv(Y_stack)*u_stack;
 error = norm(coefficients-a)
 
-experiment_path = 'data/3-dof/new_experiment6';
+experiment_path = 'data/3-dof/experiment4';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
