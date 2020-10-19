@@ -35,7 +35,10 @@
 As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achiving many tasks.\\\\
 In particular, we have dealed with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact, when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
 For this reason, we have developed an algorithm able to estimate torque signs so that we could procede with the identification using well known strategies.
-\paragraph{}In our work, we first studied a simple 1R robot under gravity; then, we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.
+\paragraph{}In our work, we first studied a simple 1R robot under gravity; then, we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.\\\\
+
+The repository of our work is available here \url{https://github.com/MarcoPenne/Robotics_Project}.
+
 \section{1R arm under gravity}
 \paragraph{}We start our work by focusing on a simple robot arm (pendulum) under gravity.
 \subsection{Simulation and dynamic model}
@@ -580,6 +583,15 @@ The norm of the error is 3.1812.
 
 \section{Conclusions}
 
+\clearpage
 
+\begin{thebibliography}{}
+\bibitem{1}
+C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
+\emph {Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization}
+\bibitem{2}
+C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
+\emph {Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization – Supplementary material (revised version: October $15^{th}$, 2019)}
+\end{thebibliography}
 
 \end{document}
