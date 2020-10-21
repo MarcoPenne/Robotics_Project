@@ -32,9 +32,9 @@
 
 \section{Introduction}
 \paragraph{}The goal of our work is to perform the dynamic identification of a robot, estimating its dynamic parameters/coefficients by solving an optimization problem.\\
-As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achiving many tasks.\\\\
-In particular, we have dealed with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact, when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
-For this reason, we have developed an algorithm able to estimate torque signs so that we could procede with the identification using well known strategies.
+As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achieving many tasks.\\\\
+In particular, we have dealt with the problem of torque sign lack, as in some real robot (eg. KUKA KR5). In fact, when we know only the absolute value of torque and we don't have the knowledge about the torque sign, we can't use traditional methods for dynamic identification.\\
+For this reason, we have developed an algorithm able to estimate torque signs so that we could proceed with the identification using well known strategies.
 \paragraph{}In our work, we first studied a simple 1R robot under gravity; then, we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.\\\\
 
 The repository of our work is available here \url{https://github.com/MarcoPenne/Robotics_Project}.
@@ -66,9 +66,9 @@ We generate exciting trajectories according to the following formula:
 \[q_j(t) = \sum_{l=1}^{L}{\frac{ a_{l,j}}{ l\omega_f }\sin(l\omega_f t)-\frac{ b_{l,j}}{l\omega_f}\cos(l\omega_f t)+q_{0,j}}\]
 We implemented a function called generate\_exciting\_traj() that generates a random exciting trajectory using the following parameters: $L = 5$ and $\omega_f = 0.1\pi$.
 \\\\
-After generated a trajectory, the simulation starts. In the main control loop we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the current instant of time.
+After generated a trajectory, the simulation starts. In the main control loop, we first get the joint position, velocity and torque (with –); then, we set a new target position according to the trajectory and the current instant of time.
 \\\\
-We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35\pi$. Also the measured torques are noisy, so we apply the same filter.
+We obtain the measured accelerations through numerical differentiation; this leads to somewhat noisy values. In order to compensate for this noise, we apply a low-pass filter of order 16 and cutoff frequency equal to $0.35\pi$ Hz. Also the measured torques are noisy, so we apply the same filter.
 \paragraph{}After that, we have all the ingredients to generate the regressor matrix with all the computed values by staking all the $Y$ in a unique matrix. We do the same for the measured torques obtaining a vector $\overline{\tau}$.
 
 \subsection{Experiments}
@@ -120,7 +120,7 @@ We report the results of the simulation with the fourth trajectory generated:
 \pagebreak
 
 \subsection{PBRP algorithm}
-\paragraph{}If we had torque signs, we would apply directly the Penalty-Based Parameters Retrivial (PBRP) algorithm. The aim of this algorithm is to get a physically consistent set of parameters; in order to do so, we need to solve the following optimization problem:
+\paragraph{}If we had torque signs, we would apply directly the Penalty-Based Parameters Retrieval (PBRP) algorithm. The aim of this algorithm is to get a physically consistent set of parameters; in order to do so, we need to solve the following optimization problem:
 \[\min_{p_k}{\phi(p_k)} = \lVert \overline{Y}\pi(p_k)-\overline{\tau} \rVert^2\]
 
 \noindent where $\overline{Y}$ is the stacked regressor, $\overline{\tau}$ is the stacked  torque measurements and $\pi(p_k)$ is the coefficients vector computed from the current parameters vector $p_k$.
@@ -132,7 +132,8 @@ We report the results of the simulation with the fourth trajectory generated:
 In general, it is possible to provide a set of lower and upper bounds for the dynamic parameters based on a priori knowledge. For instance, the center of mass must be inside the convex link of the robot. However, the aim of our work is to estimate the dynamic coefficients without torque signs. So, we cannot apply this algorithm directly, but we need a preliminary analysis in which we predict what is the most likely torque sign.
 
 \subsection{Tree of solutions}
-\paragraph{}First of all, we take the absolute values of the filtered measured torques. Then, we have to "mark" the function whenever it crosses 0. In order to do this, we should tolerate a threshold; we compute this threshold by discarding the 10\% of samples closer to 0. At this point, we discard all the samples under threshold; we are left with several segments so that in each of them the sign of the torque is either positive or negative.
+\paragraph{}First of all, we take the absolute values of the filtered measured torques, so to pretend that we haven't this kind of information.\\
+We can imagine that neighboring torques have the same sign. So, we have that sequent torque values usually have the same sign, then it starts to decrease its absolute value, approaching zero, until it crosses zero and change sign. As a consequence, we have to "mark" the function whenever it crosses 0. In order to do this, we should tolerate a threshold; we compute this threshold by discarding the 10\% of samples closer to 0. At this point, we discard all the samples under threshold; we are left with several segments so that in each of them the sign of the torque is either positive or negative.
 \paragraph{}After that, we have to predict the torque sign for each segment. The idea is: we first take a random segment which could be either positive or negative, so we have two possible solutions; then, we take another segment which again could be either positive or negative, so at this stage we have four possible solutions (by considering the previous ones), and so on. This is an exponential problem, so if we have $n$ segments we would have $2^n$ possible solutions. However, it is possible to prevent the tree from being completely expanded because we can recognize in advance when a choice of sign lead to a wrong solution; in fact, when the PBRP algorithm is applied to a torque with the wrong sign, the loss should be higher than the one with the correct sign. So, at each level of the tree, we expand only the best nodes which are the ones with the lower loss until that segments (in our case, we decided to expand the best 5 nodes). For all the optimization problems of the tree we use pattern search algorithm because it is faster.
 \paragraph{}At the end of this tree algorithm, we will obtain the best combination of signs for the segments sequence. So, we apply the PBRP algorithm to this sequence with a number of runs equal to 3 using simulated annealing.
 
@@ -321,7 +322,7 @@ We computed the position of the centers of mass in their respective frames, acco
 \subsubsection*{Dynamic model}
 To compute the dynamic model of the robot we followed these steps:
 \begin{itemize}
-\item We implemented the moving frame algorithm in order to obtain the linear and angular velocities of the frames origin;
+\item We implemented the moving frame algorithm in order to obtain the linear and angular velocities of the frames' origins;
 \item We computed the kinetic energy expressing the inertial tensors with respect to the centers of mass;
 \item From the kinetic energy, we computed the inertia matrix and the Coriolis and centrifugal terms of the model;
 \item After that we computed the potential energy, using the centers of mass expressed with respect to the base frame and we computed the gravity vector.
@@ -355,12 +356,12 @@ For the simulation we used the following values for masses and inertia tensors.
 \[ m_2 = 1.125\;kg,\quad I_{xx,2} = 4.6879\cdot10^{-4}\;kg\cdot m^2,\quad I_{yy,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2\]
 \[m_3 = 0.75\;kg,\quad I_{xx,3} = 3.1252\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2\]
 The first and the second links are two parallelepipeds which length is 0.3 $m$ and their transversal section is a square with side equal to 0.05 $m$, while the third link is 0.2 $m$ long and has a transversal section that is a square with side equal to 0.05 $m$.\\\\
-As reguards the simulation, we used the same approach of the 1R robot, but of course this time we had to deal with 3 links so we had 3 joint positions and 3 joint torques at each robot update.\\\\(vedi velocità)\\\\
+As regards the simulation, we used the same approach of the 1R robot, but of course this time we had to deal with 3 links so we had 3 joint positions and 3 joint torques at each robot update.\\\\
 We used Bullet2.78 as physics engine as we are interested in torque applied to the joint motor, and using this engine is the only way to get directly this information from the V-REP remote API.
 
 \subsection{Experiments}
-\paragraph{}We remember that the starting configuration of the robot is $q_1 = 0$, $q_2 = -\pi/2$ and $q_3 = 0$. So, we have generated some trajectories starting from 0 (that we will use for the first and third link) and others starting from $-\pi/2$ (that we will use for the second link) with the generate\_exciting\_traj() function. Then, we have done 4 simulations by combining them in different ways.\\ Again, all these trajectories are repeated 5 consecutive times but we take only the 3 intermediate periods.
-
+\paragraph{}We remember that the starting configuration of the robot is $q_1 = 0$, $q_2 = -\pi/2$ and $q_3 = 0$. So, we have generated some trajectories starting from 0 (that we will use for the first and third link) and others starting from $-\pi/2$ (that we will use for the second link) with the generate\_exciting\_traj() function. Then, we have done 4 simulations by combining them in different ways.\\ Again, all these trajectories are repeated 5 consecutive times but we take only the 3 intermediate periods.\\
+One note about the filtering process: we used low-pass filters with different cutoff frequencies in order to accomplish different tasks. In particular we filtered velocities, obtained from positions differentiation, with a cutoff frequency of $0.5 \cdot \pi$ Hz. Then, since the acceleration needed two consecutive numerical differentiations, it results to be very noisy, so we used a filter with a lower cutoff frequency ($0.3 \cdot \pi$ Hz). The same filter is used also to filter the second and third joint torques, while for the first joint torque we used an even more aggressive filter with a cutoff frequency of $0.25 \cdot \pi$ Hz.
 \paragraph{Experiment 1}
 We report the results of the simulation with the first trajectory generated:
 \begin{figure}[!htbp]
@@ -415,7 +416,7 @@ We have extended the procedure for the 1R robot to the 3R case. Since we have mo
 \caption{PBRP algorithm}
 \end{figure}
 \FloatBarrier
-In particular, in addition to the lower and upper bounds,  for each link $l_i$ the following triangle inequalities regarding the inertias  must be satisfied:
+In particular, in addition to the lower and upper bounds, for each link $l_i$ the following triangle inequalities regarding the inertias must be satisfied:
 
 \[\begin{cases}
 \overline{I}_{i,x}+\overline{I}_{i,y} > \overline{I}_{i,z} \\
@@ -427,13 +428,13 @@ These inequalities can be rewritten as:
 
 \[\frac{tr(I_{l_i})}{2}-\lambda_{max}(I_{l_i})>0\]
 
-Moeover, the total sum of the link masses must be in a given range, that is:
+Moreover, the total sum of the link masses must be in a given range, that is:
 
 \[m_{rob,min}\le \sum_i{m_i} \le m_{rob,max}\]
 
 The search algorithm is simulated annealing as before and we run the algorithm 3 times.
 \subsection{Tree of solutions}
-The tree algorithm is a simple extension of the 1R case; we highlight the fact that segments of different links are put and examinated together in random order, so that we do not give priority to any link or segment. The algorithm used to solve the optimization problems of the tree is pattern search like in the previous case.
+The tree algorithm is a simple extension of the 1R case; we highlight the fact that segments of different links are put and examined together in random order, so that we do not give priority to any link or segment. The algorithm used to solve the optimization problems of the tree is pattern search like in the previous case.
 \\\\
 After the tree has been built, we have the sequence of most likely signs that we apply to the absolute torques. Finally, we run the PBRP algorithm to the torques with the estimated signs for 3 times by using simulated annealing as search algorithm.
 
@@ -562,7 +563,7 @@ The norm of the error is 3.1812.
 \FloatBarrier
 
 \section{Conclusions}
-
+.......
 \clearpage
 
 \begin{thebibliography}{}
@@ -572,6 +573,9 @@ C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
 \bibitem{2}
 C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
 \emph {Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization – Supplementary material (revised version: October $15^{th}$, 2019)}
+\bibitem{3}
+A. De Luca
+\emph {Slides of the Robotics I/II courses}
 \end{thebibliography}
 
 \end{document}
