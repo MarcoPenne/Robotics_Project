@@ -9,10 +9,10 @@ elseif isunix
   addpath("coppelia_files/linux")
 end
 
-%%
-
+%% ----------------------
+% CONNECT TO VREP
+%------------------------
 sim=remApi('remoteApi');
-
 sim.simxFinish(-1); % just in case, close all opened connections
 clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
@@ -37,7 +37,10 @@ else
     disp('Failed connecting to remote API server');
 end
  
-%%
+%% ----------------------
+% GENERATE EXCITING TRAJECTORY
+%------------------------
+
 % [x1, y1, z1] = looping_splines([0 pi/2 -pi/2 pi/2 0],[0 5 10 15 20]);
 % [x2, y2, z2] = looping_splines([-pi/2 -pi/4 -pi/2],[0 10 20]);
 % [x3, y3, z3] = looping_splines([0 pi/4 -pi/3 0],[0 5 15 20]);
@@ -80,7 +83,9 @@ for i=1:3
     fplot(acceleration(i), [0 period]);
 end
    
-%%
+%% ----------------------
+% SIMULATION
+%------------------------
 
 sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot);
 
@@ -150,7 +155,10 @@ while seconds(datetime('now')-start) < period * 5
 end
 
 sim.simxStopSimulation(clientID, sim.simx_opmode_oneshot);
-%%
+
+%% ----------------------
+% DATA FILTERING, PLOTS AND SAVING FILES
+%------------------------
 
 figure('Name', 'Experiments');
 subplot(3,3,1);

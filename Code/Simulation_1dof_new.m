@@ -9,8 +9,10 @@ elseif isunix
   addpath("coppelia_files/linux")
 end
 
+%% ----------------------
+% CONNECT TO VREP
+%------------------------
 disp('Program started');
-% sim=remApi('remoteApi','extApi.h'); % using the header (requires a compiler)
 sim=remApi('remoteApi'); % using the prototype file (remoteApiProto.m)
 sim.simxFinish(-1); % just in case, close all opened connections
 clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
@@ -27,6 +29,10 @@ if (clientID>-1)
 else
     disp('Failed connecting to remote API server');
 end
+
+%% ----------------------
+% GENERATE EXCITING TRAJECTORY
+%------------------------
 
 % position_traj = [0 pi/4 0];
 % time_traj = [0 10 20];
@@ -48,6 +54,9 @@ fplot(velocity, [0 period]);
 subplot(3,1,3);
 fplot(acceleration, [0 period]);
 
+%% ----------------------
+% SIMULATION
+%------------------------
 sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot);
 
 measured_pos = zeros(1, 500000);
@@ -78,6 +87,7 @@ while seconds(datetime('now')-start) < period * 5
     end
     time_axis(i) = t;
     
+    % Get joint position
     [returnCode,joint_position]=sim.simxGetJointPosition(clientID,joint,sim.simx_opmode_streaming);
     if returnCode==0
         measured_pos(i) = joint_position;
@@ -87,6 +97,7 @@ while seconds(datetime('now')-start) < period * 5
     [returnCode, linear, angular] = sim.simxGetObjectVelocity(clientID, link, sim.simx_opmode_streaming);
     measured_vel(i) = angular(1);
     
+    % Get joint torque
     [returnCode,u]=sim.simxGetJointForce(clientID,joint,sim.simx_opmode_streaming);
     measured_torque(i) = [-u];
     
@@ -104,6 +115,10 @@ while seconds(datetime('now')-start) < period * 5
 end
 
 sim.simxStopSimulation(clientID, sim.simx_opmode_oneshot);
+
+%% ----------------------
+% DATA FILTERING, PLOTS AND SAVING FILES
+%------------------------
 
 figure('Name', 'Experiments');
 subplot(3,1,1);
