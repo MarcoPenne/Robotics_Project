@@ -4,38 +4,28 @@ clear all
 
 addpath('functions');
 
-num_of_joints = 1; % DoFs of the Franka Emika Panda robot
+num_of_joints = 1; % DoFs of the robot
 
-% load numerical evaluated regressor and symbolic dynamic coefficients,
-% useful for final cross-validation and in case use_complete_regressor =
-% true.
-%
-% In particular:
-%  - Y_stack_LI contains a stacked evaluated regressor (exciting
-%  trajectories have been used)
-%  - tau_stack contains the vector of stacked measurements (joint
-%  torques)
-%  - P_li_full contains the symbolic dynamic coefficients vector, with
-%  the inertia tensors expressed w.r.t. link frames
-%  - P_li_full_subs contains the symbolic dynamic coefficients vector,
-%  with the inertia tensors expressed w.r.t. link CoMs
-
-% total samples retrieved during exciting trajectories
+% load regressor matrix Y and vector of stacked torques
 load('data/1-dof/new_experiment6/Y_1dof.mat', 'Y_1dof')
 load('data/1-dof/new_experiment6/u_1dof.mat', 'u_1dof')
+
+% take only the absolute value of the torques
 u_1dof_abs = abs(u_1dof);
 
 num_of_samples = size(Y_1dof,1)/num_of_joints;
 
+% computing the 10% of min abs values
 sorted_u = sort(u_1dof_abs);
 threshold = sorted_u(int32(num_of_samples*0.1)+1);
 
 % ---------------------------
 % read lower and upper bounds
 % ---------------------------
-
 [LB,UB] = read_bounds('data/1-dof/bounds/bound_1dof.csv');
-%threshold = 1;
+
+% finding the segments with constant sign torque 
+% indices contains the start and the finish of each segment
 indices = change_of_sign(u_1dof_abs, threshold);
 indices_long = [];
 for i=1:size(indices, 1)
@@ -45,13 +35,22 @@ for i=1:size(indices, 1)
 end
 indices = indices_long;
 
-[Y_estimated,u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
+%-----------------------------------
+% BUILD THE TREE
+%-----------------------------------
+% Let the tree PBRP algorithm estimate the signs for each segment annording
+% to the indices. It will return:
+% - a regressor matrix: Y_estimated, with rows in correct order
+% - a vector: u_estimated_sign, with estimated sign and elements in correct order 
+% - a vector: signs, with the estimated sign for each segment.
+
+[Y_estimated, u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
+
 
 %----------------------------------
-% initializations
+% RUN THE TRADITIONAL PBRP ALGORITHM
 %----------------------------------
 num_of_runs = 3; % independent (parallelizable) runs of the entire algorithm (29)
-% num_of_SA_steps = 5; % successive runs of the algorithm (29). It is the variable \kappa in (29)
 
 num_x = length(LB); % number of parameters
 
@@ -73,18 +72,17 @@ EXITFLAGS = zeros(num_of_runs,1);
 %----------------------------------
 
 for i=1:num_of_runs
-    %for SA_step=1:num_of_SA_steps
-        stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
-        disp(stringtodisp);
-        
-        X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
-        
-        options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+    stringtodisp = sprintf('RUN %d of %d',i,num_of_runs);
+    disp(stringtodisp);
 
-        [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y_estimated, u_estimated_sign),X0,LB,UB,options);
+    X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
 
-        X0 = X;
-    %end
+    options = saoptimset('HybridFcn',{@fmincon}); % use Nelder-Mead optimization as hybrid function
+
+    [X,FVAL,EXITFLAG,OUTPUT] = simulannealbnd(@(x) error_fcn_gM_LMI_regressor_1dof(x, Y_estimated, u_estimated_sign),X0,LB,UB,options);
+
+    X0 = X;
+
     disp('---------------------------');
     disp(sprintf('.........LOSS = %f',FVAL));
     disp('---------------------------');

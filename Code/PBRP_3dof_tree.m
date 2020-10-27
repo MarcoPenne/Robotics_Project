@@ -4,35 +4,22 @@ clear all
 
 addpath('functions');
 
-num_of_joints = 3; % DoFs of the Franka Emika Panda robot
+num_of_joints = 3; % DoFs of the robot
 
-% load numerical evaluated regressor and symbolic dynamic coefficients,
-% useful for final cross-validation and in case use_complete_regressor =
-% true.
-%
-% In particular:
-%  - Y_stack_LI contains a stacked evaluated regressor (exciting
-%  trajectories have been used)
-%  - tau_stack contains the vector of stacked measurements (joint
-%  torques)
-%  - P_li_full contains the symbolic dynamic coefficients vector, with
-%  the inertia tensors expressed w.r.t. link frames
-%  - P_li_full_subs contains the symbolic dynamic coefficients vector,
-%  with the inertia tensors expressed w.r.t. link CoMs
-
-% total samples retrieved during exciting trajectories
+% load regressor matrix Y and vector of stacked torques
 load('data/3-dof/experiment6/Y_stack.mat', 'Y_stack')
 load('data/3-dof/experiment6/u_stack.mat', 'u_stack')
+
+% take only the absolute value of the torques
 u_3dof_abs = abs(u_stack);
 
 num_of_samples = size(Y_stack,1)/num_of_joints;
 
-
 % ---------------------------
 % read lower and upper bounds
 % ---------------------------
-
 [LB,UB] = read_bounds('data/3-dof/bounds/bound_3dof.csv');
+
 
 u1_3dof_abs = u_3dof_abs(1:3:3*num_of_samples);
 u2_3dof_abs = u_3dof_abs(2:3:3*num_of_samples);
@@ -42,6 +29,7 @@ Y1_stack = Y_stack(1:3:3*num_of_samples, :);
 Y2_stack = Y_stack(2:3:3*num_of_samples, :);
 Y3_stack = Y_stack(3:3:3*num_of_samples, :);
 
+% computing the 10% of min abs values
 sorted_u1 = sort(u1_3dof_abs);
 threshold1 = sorted_u1(int32(num_of_samples*0.1)+1);
 
@@ -51,9 +39,10 @@ threshold2 = sorted_u2(int32(num_of_samples*0.1)+1);
 sorted_u3 = sort(u3_3dof_abs);
 threshold3 = sorted_u3(int32(num_of_samples*0.1)+1);
 
-%threshold = [0.005, 0.3, 0.2];
 threshold = [threshold1, threshold2, threshold3];
 
+% finding the segments with constant sign torque 
+% indices contains the start and the finish of each segment
 indices1 = change_of_sign(u1_3dof_abs, threshold(1));
 indices2 = change_of_sign(u2_3dof_abs, threshold(2));
 indices3 = change_of_sign(u3_3dof_abs, threshold(3));
@@ -82,10 +71,19 @@ indices1 = indices_long1;
 indices2 = indices_long2;
 indices3 = indices_long3;
 
-[Y_final, u_final, signs] = tree_3dof(Y1_stack, Y2_stack, Y3_stack, u1_3dof_abs, u2_3dof_abs, u3_3dof_abs, indices1, indices2, indices3, LB, UB)
+%-----------------------------------
+% BUILD THE TREE
+%-----------------------------------
+% Let the tree PBRP algorithm estimate the signs for each segment annording
+% to the indices. It will return:
+% - a regressor matrix: Y_final, with rows in correct order
+% - a vector: u_final, with estimated sign and elements in correct order 
+% - a vector: signs, with the estimated sign for each segment.
+
+[Y_final, u_final, signs] = tree_3dof(Y1_stack, Y2_stack, Y3_stack, u1_3dof_abs, u2_3dof_abs, u3_3dof_abs, indices1, indices2, indices3, LB, UB);
 
 %----------------------------------
-% initializations
+% RUN THE TRADITIONAL PBRP ALGORITHM
 %----------------------------------
 num_of_runs = 3; % independent (parallelizable) runs of the entire algorithm (29)
 num_of_SA_steps = 3; % successive runs of the algorithm (29). It is the variable \kappa in (29)
