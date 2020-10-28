@@ -2,11 +2,11 @@ function [pos,vel, acc] = generate_exciting_traj(init_point)
 %GENERATE_EXCITING_TRAJ Summary of this function goes here
 %   Detailed explanation goes here
 
-limit = pi/6;
+limit = pi/2;
 a = rand(5,1) -0.5;
 b = rand(5,1) -0.5;
 q0 = rand(1,1) - 0.5;
-w = 0.1*pi;
+w = 0.2*pi;
 
 syms pos(t);
 
