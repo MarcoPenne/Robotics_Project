@@ -7,8 +7,8 @@ addpath('functions');
 num_of_joints = 3; % DoFs of the robot
 
 % load regressor matrix Y and vector of stacked torques
-load('data/3-dof/experiment6/Y_stack.mat', 'Y_stack')
-load('data/3-dof/experiment6/u_stack.mat', 'u_stack')
+load('data/3-dof/new_experiment123/Y_stack.mat', 'Y_stack')
+load('data/3-dof/new_experiment123/u_stack.mat', 'u_stack')
 
 % take only the absolute value of the torques
 u_3dof_abs = abs(u_stack);
@@ -189,26 +189,29 @@ indices = {indices1, indices2, indices3};
 
 % plot validation results
 figure
-samples = 1:num_of_samples;
+dt = 0.02;
+period = 10;
+samples = 0:dt:period;
 for i=1:num_of_joints
     subplot(3,1,i);
     hold on
     plot(samples,TAU_TRUE(i,:),samples,TAU_ESTD(i,:));
     for seg=1:size(indices{i},1)
-        xline(indices{i}(seg, 1), '--g');
-        xline(indices{i}(seg, 2), '--r');
+        xline(indices{i}(seg, 1)*dt, '--g');
+        xline(indices{i}(seg, 2)*dt, '--r');
         if signs{i}(seg)>0
             lab = '+';
         else
             lab = '-';
         end
-        text(0.5*indices{i}(seg, 2) + 0.5*indices{i}(seg, 1), 0, lab, 'HorizontalAlignment', 'center');
+        %lab = 'o';
+        text(0.5*indices{i}(seg, 2)*dt + 0.5*indices{i}(seg, 1)*dt, 0, lab, 'HorizontalAlignment', 'center');
     end
     yline(threshold(i), '--o');
     yline(-threshold(i), '--o');
     hold off
     grid;
-    xlabel('samples [#]');
+    xlabel('time [s]');
     ylabel('torque [Nm]');
     if i==num_of_joints
         legend('true','estimated');
@@ -216,9 +219,7 @@ for i=1:num_of_joints
 end
 
 estimated_coefficients = get_3dof_coefficients(m1,rc1x,rc1y,rc1z,I1yy,m2,rc2x,rc2y,rc2z,I2xx,I2yy,I2zz,m3,rc3x,rc3y,rc3z,I3xx,I3yy,I3zz);
-ground_coefficients = get_3dof_coefficients(10, 0, 0.15, 0, 4.167e-04*10, 1.125, 0.15, 0, 0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, 0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
-
-a_3dof = pinv(Y_stack)*u_stack;
+ground_coefficients = get_3dof_coefficients(10, 0, -0.15, 0, 4.167e-04*10, 1.125, -0.15, 0, -0.06, 4.167e-04*1.125, 7.708e-03*1.125, 7.708e-03*1.125, 0.75, -0.1, 0, 0, 4.167e-04*0.75, 3.542e-03*0.75, 3.542e-03*0.75);
 
 error_measure = norm(estimated_coefficients - ground_coefficients);
 
@@ -226,7 +227,74 @@ disp('The estimated dynamic coefficients w/o torque signs are:')
 disp(estimated_coefficients)
 disp('The ground values of the dynamic coefficients are:')
 disp(ground_coefficients)
-disp('The estimated dynamic coefficients with torque signs are:')
-disp(a_3dof)
 disp('The norm of the difference between estimated dynamic coefficients w/o torque signs and ground values is:')
 disp(error_measure)
+
+u1_segments = {};
+u2_segments = {};
+u3_segments = {};
+
+total_segments1 = 0;
+correct_segments1 = 0;
+correct_signs1 = 0;
+
+n_segments1 = size(indices1,1);
+n_segments2 = size(indices2,1);
+n_segments3 = size(indices3,1);
+
+for i=1:n_segments1
+    u1_segments{i} = u1_stack(indices1(i, 1):indices1(i, 2));
+    total_segments1 = total_segments1 + 1;
+    if ~any(diff(sign(u1_segments{i}(u1_segments{i}~=0))))
+        correct_segments1 = correct_segments1 + 1;
+        if signs{1}(i)*u1_segments{i}(1) > 0
+            correct_signs1 = correct_signs1 + 1;
+        end
+    end   
+end
+
+total_segments2 = 0;
+correct_segments2 = 0;
+correct_signs2 = 0;
+
+for i=1:n_segments2
+    u2_segments{i} = u2_stack(indices2(i, 1):indices2(i, 2));
+    total_segments2 = total_segments2 + 1;
+    if ~any(diff(sign(u2_segments{i}(u2_segments{i}~=0))))
+        correct_segments2 = correct_segments2 + 1;
+        if signs{2}(i)*u2_segments{i}(1) > 0
+            correct_signs2 = correct_signs2 + 1;
+        end
+    end   
+end
+
+total_segments3 = 0;
+correct_segments3 = 0;
+correct_signs3 = 0;
+
+for i=1:n_segments3
+    u3_segments{i} = u3_stack(indices3(i, 1):indices3(i, 2));
+    total_segments3 = total_segments3 + 1;
+    if ~any(diff(sign(u3_segments{i}(u3_segments{i}~=0))))
+        correct_segments3 = correct_segments3 + 1;
+        if signs{3}(i)*u3_segments{i}(1) > 0
+            correct_signs3 = correct_signs3 + 1;
+        end
+    end   
+end
+
+acc_seg1 = correct_segments1/total_segments1;
+acc_seg2 = correct_segments2/total_segments2;
+acc_seg3 = correct_segments3/total_segments3;
+
+acc_seg_total = (correct_segments1+correct_segments2+correct_segments3)/(total_segments1+total_segments2+total_segments3);
+
+acc_seg_table = table(acc_seg1,acc_seg2,acc_seg3,acc_seg_total, 'VariableNames', {'Torque 1','Torque 2','Torque 3','Total'},'RowNames',{'Accuracy on segments'})
+
+acc_sign1 = correct_signs1/correct_segments1;
+acc_sign2 = correct_signs2/correct_segments2;
+acc_sign3 = correct_signs3/correct_segments3;
+
+acc_sign_total = (correct_signs1+correct_signs2+correct_signs3)/(correct_segments1+correct_segments2+correct_segments3);
+
+acc_sign_table = table(acc_sign1,acc_sign2,acc_sign3,acc_sign_total, 'VariableNames', {'Torque 1','Torque 2','Torque 3','Total'},'RowNames',{'Accuracy on signs'})

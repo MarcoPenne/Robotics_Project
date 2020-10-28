@@ -14,7 +14,7 @@ function [Y_final, u_final, signs_finals] = tree_3dof(Y1, Y2, Y3, u1, u2, u3, in
     TOP_U = {[]};
     signs = ones(n_segments,1);
 
-    permuted_order = randperm(n_segments);
+    permuted_order = [];%randperm(n_segments);
     
     Y_segments = {};
     u_segments = {};
@@ -31,6 +31,43 @@ function [Y_final, u_final, signs_finals] = tree_3dof(Y1, Y2, Y3, u1, u2, u3, in
     for i=1:n_segments3
         Y_segments{i+n_segments1+n_segments2} = Y3(indices3(i, 1):indices3(i, 2), :);
         u_segments{i+n_segments1+n_segments2} = u3(indices3(i, 1):indices3(i, 2));
+    end
+    %save ws Y_segments
+    
+    best_condition = Inf;
+    best_condition_indices = [0, 0];
+    for i=1:n_segments-1
+        for j=i+1:n_segments
+            c = cond([Y_segments{i}; Y_segments{j}]);
+            if c<best_condition
+                best_condition = c;
+                best_condition_indices = [i, j];
+            end
+        end
+    end
+    permuted_order(end+1) = best_condition_indices(1);
+    permuted_order(end+1) = best_condition_indices(2);
+    
+    remaining_segments = 1:n_segments;
+    remaining_segments(best_condition_indices(1)) = [];
+    remaining_segments(best_condition_indices(2)-1) = [];
+    Y_now = [Y_segments{best_condition_indices(1)}; Y_segments{best_condition_indices(2)}];
+    for k=1:n_segments-2
+        best_condition = Inf;
+        best_condition_index = 0;
+        best_condition_index_reman = 0;
+        for i=1:length(remaining_segments)
+            j = remaining_segments(i);
+            c = cond([Y_now; Y_segments{j}]);
+            if c<best_condition
+                best_condition = c;
+                best_condition_index = j;
+                best_condition_index_reman = i;
+            end
+        end
+        permuted_order(end+1) = best_condition_index;
+        Y_now = [Y_now; Y_segments{best_condition_index}];
+        remaining_segments(best_condition_index_reman) = [];
     end
     
     Y_final = {};
