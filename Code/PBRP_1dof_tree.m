@@ -47,7 +47,7 @@ indices = indices_long;
 % - a vector: u_estimated_sign, with estimated sign and elements in correct order 
 % - a vector: signs, with the estimated sign for each segment.
 
-[Y_estimated, u_estimated_sign, signs] = tree1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
+[Y_estimated, u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
 
 
 %----------------------------------
@@ -130,7 +130,7 @@ end
 % plot validation results
 figure
 dt = 0.02;
-period = 20;
+period = 10;
 samples = 0:dt:period;
 for i=1:num_of_joints
     subplot(1,1,i);

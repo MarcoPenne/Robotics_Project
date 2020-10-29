@@ -7,7 +7,7 @@ addpath("functions/");
 % GENERATE EXCITING TRAJECTORY
 %------------------------
 
-[position, velocity, acceleration, time] = load_trajectory('data/1-dof/trajectory1');
+[position, velocity, acceleration, time] = load_trajectory('data/1-dof/new_trajectory1');
 
 [position, velocity, acceleration] = looping_splines(position, time);
 
