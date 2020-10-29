@@ -7,8 +7,11 @@ addpath('functions');
 num_of_joints = 1; % DoFs of the robot
 
 % load regressor matrix Y and vector of stacked torques
-load('data/1-dof/new_experiment6/Y_1dof.mat', 'Y_1dof')
-load('data/1-dof/new_experiment6/u_1dof.mat', 'u_1dof')
+load('data/1-dof/new_experiment1/Y_stack.mat', 'Y_stack')
+load('data/1-dof/new_experiment1/u_stack.mat', 'u_stack')
+
+Y_1dof = Y_stack;
+u_1dof = u_stack;
 
 % take only the absolute value of the torques
 u_1dof_abs = abs(u_1dof);
@@ -44,7 +47,7 @@ indices = indices_long;
 % - a vector: u_estimated_sign, with estimated sign and elements in correct order 
 % - a vector: signs, with the estimated sign for each segment.
 
-[Y_estimated, u_estimated_sign, signs] = tree_1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
+[Y_estimated, u_estimated_sign, signs] = tree1dof(Y_1dof, u_1dof_abs, indices, LB, UB);
 
 
 %----------------------------------
@@ -126,27 +129,29 @@ end
 
 % plot validation results
 figure
-samples = 1:num_of_samples;
+dt = 0.02;
+period = 20;
+samples = 0:dt:period;
 for i=1:num_of_joints
     subplot(1,1,i);
     hold on
     plot(samples,TAU_TRUE(i,:),samples,TAU_ESTD(i,:));
     
     for seg=1:size(indices,1)
-        xline(indices(seg, 1), '--g');
-        xline(indices(seg, 2), '--r');
+        xline(indices(seg, 1)*dt, '--g');
+        xline(indices(seg, 2)*dt, '--r');
         if signs(seg)>0
             lab = '+';
         else
             lab = '-';
         end
-        text(0.5*indices(seg, 2) + 0.5*indices(seg, 1), 0, lab, 'HorizontalAlignment', 'center');
+        text(0.5*indices(seg, 2)*dt + 0.5*indices(seg, 1)*dt, 0, lab, 'HorizontalAlignment', 'center');
     end
     yline(threshold, '--o');
     yline(-threshold, '--o');
     hold off
     grid;
-    xlabel('samples [#]');
+    xlabel('time [s]');
     ylabel('torque [Nm]');
     if i==num_of_joints
         legend('true','estimated');
@@ -156,14 +161,38 @@ end
 estimated_coefficients = get_1dof_coefficients(optimal_solution(1),optimal_solution(2),optimal_solution(3));
 ground_coefficients = get_1dof_coefficients(5,0.5,5*(8.417e-02));
 
-a_1dof = pinv(Y_1dof)*u_1dof;
 error_measure = norm(estimated_coefficients - ground_coefficients);
 
 disp('The estimated dynamic coefficients w/o torque signs are:')
 disp(estimated_coefficients)
 disp('The ground values of the dynamic coefficients are:')
 disp(ground_coefficients)
-disp('The estimated dynamic coefficients with torque signs are:')
-disp(a_1dof)
 disp('The norm of the difference between estimated dynamic coefficients w/o torque signs and ground values is:')
 disp(error_measure)
+
+u_segments = {};
+
+total_segments = 0;
+correct_segments = 0;
+correct_signs = 0;
+
+n_segments = size(indices,1);
+
+for i=1:n_segments
+    u_segments{i} = u_1dof(indices(i, 1):indices(i, 2));
+    total_segments = total_segments + 1;
+    if ~any(diff(sign(u_segments{i}(u_segments{i}~=0))))
+        correct_segments = correct_segments + 1;
+        if signs(i)*u_segments{i}(1) > 0
+            correct_signs = correct_signs + 1;
+        end
+    end   
+end
+
+acc_seg = correct_segments/total_segments;
+
+acc_seg_table = table(acc_seg, 'RowNames', {'Accuracy on segments'})
+
+acc_sign = correct_signs/correct_segments;
+
+acc_sign_table = table(acc_sign, 'RowNames', {'Accuracy on signs'})
