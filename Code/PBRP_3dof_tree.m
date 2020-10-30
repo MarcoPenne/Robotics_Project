@@ -7,9 +7,9 @@ addpath('functions');
 num_of_joints = 3; % DoFs of the robot
 
 % load regressor matrix Y and vector of stacked torques
-load('data/3-dof/new_experiment123/Y_stack.mat', 'Y_stack')
-load('data/3-dof/new_experiment123/u_stack.mat', 'u_stack')
-load('data/3-dof/new_experiment123/duration.mat', 'duration')
+load('data/3-dof/new_experiment456/Y_stack.mat', 'Y_stack')
+load('data/3-dof/new_experiment456/u_stack.mat', 'u_stack')
+load('data/3-dof/new_experiment456/duration.mat', 'duration')
 
 % take only the absolute value of the torques
 u_3dof_abs = abs(u_stack);
@@ -298,3 +298,8 @@ acc_sign3 = correct_signs3/correct_segments3;
 acc_sign_total = (correct_signs1+correct_signs2+correct_signs3)/(correct_segments1+correct_segments2+correct_segments3);
 
 acc_sign_table = table(acc_sign1,acc_sign2,acc_sign3,acc_sign_total, 'VariableNames', {'Torque 1','Torque 2','Torque 3','Total'},'RowNames',{'Accuracy on signs'})
+
+% Save things
+save 'results/3-dof/new_experiment456/results' optimal_solution estimated_coefficients error_measure acc_seg_table acc_sign_table
+saveas(gcf,'results/3-dof/new_experiment456/results.png')
+saveas(gcf,'results/3-dof/new_experiment456/results.fig')

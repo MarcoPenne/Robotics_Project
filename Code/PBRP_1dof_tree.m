@@ -7,9 +7,9 @@ addpath('functions');
 num_of_joints = 1; % DoFs of the robot
 
 % load regressor matrix Y and vector of stacked torques
-load('data/1-dof/new_experiment1/Y_stack.mat', 'Y_stack')
-load('data/1-dof/new_experiment1/u_stack.mat', 'u_stack')
-load('data/1-dof/new_experiment1/duration.mat', 'duration')
+load('data/1-dof/new_experiment_easy2/Y_stack.mat', 'Y_stack')
+load('data/1-dof/new_experiment_easy2/u_stack.mat', 'u_stack')
+load('data/1-dof/new_experiment_easy2/duration.mat', 'duration')
 
 
 Y_1dof = Y_stack;
@@ -197,3 +197,8 @@ acc_seg_table = table(acc_seg, 'RowNames', {'Accuracy on segments'})
 acc_sign = correct_signs/correct_segments;
 
 acc_sign_table = table(acc_sign, 'RowNames', {'Accuracy on signs'})
+
+% Save things
+save 'results/1-dof/new_experiment_easy2/results' optimal_solution estimated_coefficients error_measure acc_seg_table acc_sign_table
+saveas(gcf,'results/1-dof/new_experiment_easy2/results.png')
+saveas(gcf,'results/1-dof/new_experiment_easy2/results.fig')
