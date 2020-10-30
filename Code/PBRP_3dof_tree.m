@@ -9,6 +9,7 @@ num_of_joints = 3; % DoFs of the robot
 % load regressor matrix Y and vector of stacked torques
 load('data/3-dof/new_experiment123/Y_stack.mat', 'Y_stack')
 load('data/3-dof/new_experiment123/u_stack.mat', 'u_stack')
+load('data/3-dof/new_experiment123/duration.mat', 'duration')
 
 % take only the absolute value of the torques
 u_3dof_abs = abs(u_stack);
@@ -190,8 +191,7 @@ indices = {indices1, indices2, indices3};
 % plot validation results
 figure
 dt = 0.02;
-period = 10;
-samples = 0:dt:period;
+samples = 0:dt:duration;
 for i=1:num_of_joints
     subplot(3,1,i);
     hold on

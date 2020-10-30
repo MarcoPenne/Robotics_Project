@@ -9,6 +9,8 @@ num_of_joints = 1; % DoFs of the robot
 % load regressor matrix Y and vector of stacked torques
 load('data/1-dof/new_experiment1/Y_stack.mat', 'Y_stack')
 load('data/1-dof/new_experiment1/u_stack.mat', 'u_stack')
+load('data/1-dof/new_experiment1/duration.mat', 'duration')
+
 
 Y_1dof = Y_stack;
 u_1dof = u_stack;
@@ -130,8 +132,7 @@ end
 % plot validation results
 figure
 dt = 0.02;
-period = 10;
-samples = 0:dt:period;
+samples = 0:dt:duration;
 for i=1:num_of_joints
     subplot(1,1,i);
     hold on
