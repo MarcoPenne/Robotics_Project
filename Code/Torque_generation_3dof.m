@@ -46,7 +46,8 @@ for i=1:3
 end
 
 dt = 0.02;
-timestamps = 0:dt:period;
+duration = period;
+timestamps = 0:dt:duration;
 
 freq = 1/dt;
 
@@ -100,3 +101,4 @@ error = norm(coefficients-a)
 experiment_path = 'data/3-dof/new_experiment123';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
+save(fullfile(experiment_path,'duration.mat'), 'duration');

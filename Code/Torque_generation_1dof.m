@@ -28,7 +28,8 @@ xlabel("time (s)")
 ylabel("acceleration (rad/s^2)");
 
 dt = 0.02;
-timestamps = 0:dt:period;
+duration = period*3;
+timestamps = 0:dt:duration;
 
 freq = 1/dt;
 
@@ -59,6 +60,7 @@ a
 coefficients = pinv(Y_stack)*u_stack
 error = norm(coefficients-a)
 
-experiment_path = 'data/1-dof/new_experiment1';
+experiment_path = 'data/1-dof/new_experiment1_long';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
+save(fullfile(experiment_path,'duration.mat'), 'duration');
