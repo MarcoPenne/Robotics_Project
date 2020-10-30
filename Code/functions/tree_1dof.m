@@ -20,25 +20,47 @@ function [Y_final, u_final, signs_finals] = tree_1dof(Y, u, indices, LB, UB)
         u_segments{i} = u(indices(i, 1):indices(i, 2));
     end
     
+    
+    % finding minimum amount of segments that make Y well conditioned
     best_condition = Inf;
-    best_condition_indices = [0, 0];
-    for i=1:n_segments-1
-        for j=i+1:n_segments
-            c = cond([Y_segments{i}; Y_segments{j}]);
+    best_condition_indices = [1];
+    i=1;
+    while best_condition > 1000
+        best_condition = Inf;
+        ij_order = nchoosek(1:n_segments, i);
+    
+        for n=1:length(ij_order)
+            ij = ij_order(n, :);
+            Y_tmp = [];
+            for l=1:length(ij)
+                Y_tmp = [Y_tmp; Y_segments{ij(l)}];
+            end
+            c = cond(Y_tmp);
             if c<best_condition
                 best_condition = c;
-                best_condition_indices = [i, j];
+                best_condition_indices = ij;
             end
         end
+        disp("Best condition with "+i+" segments is "+best_condition);
+        i = i+1;
     end
-    permuted_order(end+1) = best_condition_indices(1);
-    permuted_order(end+1) = best_condition_indices(2);
+    disp("Found well-defined problem using segments")
+    disp(best_condition_indices)
+    for l=1:length(best_condition_indices)
+        permuted_order(end+1) = best_condition_indices(l);
+    end
     
     remaining_segments = 1:n_segments;
-    remaining_segments(best_condition_indices(1)) = [];
-    remaining_segments(best_condition_indices(2)-1) = [];
-    Y_now = [Y_segments{best_condition_indices(1)}; Y_segments{best_condition_indices(2)}];
-    for k=1:n_segments-2
+    for l=1:length(best_condition_indices)
+        remaining_segments(best_condition_indices(l)-l+1) = [];
+    end
+    
+    Y_now = [];
+    for l=1:length(best_condition_indices)
+        Y_now = [Y_now; Y_segments{best_condition_indices(l)}];
+    end
+    disp("Generating order")
+    for k=1:n_segments-length(best_condition_indices)
         best_condition = Inf;
         best_condition_index = 0;
         best_condition_index_reman = 0;
@@ -55,6 +77,62 @@ function [Y_final, u_final, signs_finals] = tree_1dof(Y, u, indices, LB, UB)
         Y_now = [Y_now; Y_segments{best_condition_index}];
         remaining_segments(best_condition_index_reman) = [];
     end
+    disp(permuted_order)
+    
+    %initializing problem
+    disp("INITIALIZING DATA STRUCTURES WITH WELL-DEFINED PROBLEM ("+length(best_condition_indices)+" segments)...")
+    LOSSES = [];
+    SIGNS = {};
+    RESULTS = {};
+    Y = {};
+    U = {};
+    Y_now = [];
+    for j=1:length(best_condition_indices)
+        Y_now = [Y_now; Y_segments{permuted_order(j)}];
+    end
+    signs_now = zeros(1, n_segments);
+    for i=0:2^length(best_condition_indices)-1
+        bits = flip(dec2bin(i, length(best_condition_indices)));
+        % creating U
+        U_now = [];
+        for j=1:length(best_condition_indices)
+            if bits(j)=='0'
+                U_now = [U_now; -u_segments{permuted_order(j)}];
+                signs_now(permuted_order(j)) = -1;
+            else
+                U_now = [U_now;  u_segments{permuted_order(j)}];
+                signs_now(permuted_order(j)) = 1;
+            end 
+        end
+        
+        [loss_pos, solution_pos] = solve_optimization_1dof(Y_now, U_now, LB, UB, TOP_RESULTS{1});
+        LOSSES = [LOSSES, loss_pos];
+        RESULTS = [RESULTS, solution_pos];
+        SIGNS = [SIGNS, signs_now];
+        Y{end+1} = Y_now;
+        U{end+1} = U_now;
+        
+    end
+    [~,LOSS_sort] = sort(LOSSES);
+    Y = Y(LOSS_sort);
+    U = U(LOSS_sort);
+    RESULTS = RESULTS(LOSS_sort);
+    SIGNS = SIGNS(LOSS_sort);
+    LOSSES = LOSSES(LOSS_sort);
+
+    if n_top_pool<length(LOSSES)
+        TOP_Y = Y(1:n_top_pool);
+        TOP_U = U(1:n_top_pool);
+        TOP_LOSSES = LOSSES(1:n_top_pool);
+        TOP_RESULTS = RESULTS(1:n_top_pool);
+        TOP_SIGNS = SIGNS(1:n_top_pool);
+    else
+        TOP_Y = Y;
+        TOP_U = U;
+        TOP_LOSSES = LOSSES;
+        TOP_RESULTS = RESULTS;
+        TOP_SIGNS = SIGNS;
+    end
     
     Y_final = {};
     u_final = {};
@@ -64,7 +142,7 @@ function [Y_final, u_final, signs_finals] = tree_1dof(Y, u, indices, LB, UB)
     RESULTS = {};
     Y = {};
     U = {};
-    for k = 1:length(permuted_order)
+    for k = length(best_condition_indices)+1:length(permuted_order)
         i = permuted_order(k);
         
         string2disp = sprintf("PROCESSING SEGMENT %d/%d  (%d)", k, n_segments, i);
