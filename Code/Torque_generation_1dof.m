@@ -7,11 +7,17 @@ addpath("functions/");
 % GENERATE EXCITING TRAJECTORY
 %------------------------
 
-[position, velocity, acceleration, time] = load_trajectory('data/1-dof/new_trajectory1');
+position_traj = [0 pi/4 -pi/4 0];
+time_traj = [0 5 15 20];
+[position, velocity, acceleration] = looping_splines(position_traj, time_traj);
 
-[position, velocity, acceleration] = looping_splines(position, time);
+period = 20;
 
-period = time(length(time));
+% [position, velocity, acceleration, time] = load_trajectory('data/1-dof/new_trajectory1');
+% 
+% [position, velocity, acceleration] = looping_splines(position, time);
+% 
+% period = time(length(time));
 
 figure('Name', 'Trajectories');
 subplot(3,1,1);
@@ -28,7 +34,7 @@ xlabel("time (s)")
 ylabel("acceleration (rad/s^2)");
 
 dt = 0.02;
-duration = period*3;
+duration = period;
 timestamps = 0:dt:duration;
 
 freq = 1/dt;
@@ -60,7 +66,7 @@ a
 coefficients = pinv(Y_stack)*u_stack
 error = norm(coefficients-a)
 
-experiment_path = 'data/1-dof/new_experiment1_long';
+experiment_path = 'data/1-dof/new_experiment_easy2';
 save(fullfile(experiment_path,'Y_stack.mat'), 'Y_stack');
 save(fullfile(experiment_path,'u_stack.mat'), 'u_stack');
 save(fullfile(experiment_path,'duration.mat'), 'duration');
