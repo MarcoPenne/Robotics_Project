@@ -17,7 +17,7 @@ clientID=sim.simxStart('127.0.0.1',19997,true,true,5000,5);
 
 if (clientID>-1)
     disp('Connected to remote API server');
-    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control_validation.ttt',1,sim.simx_opmode_blocking);
+    [returnCode]=sim.simxLoadScene(clientID,'scenes/1-dof_position_control.ttt',1,sim.simx_opmode_blocking);
     
     % Now send some data to CoppeliaSim in a non-blocking fashion:
     sim.simxAddStatusbarMessage(clientID,'Hello CoppeliaSim!',sim.simx_opmode_oneshot);
@@ -34,7 +34,7 @@ end
 % 
 % period = 20;
 
-trajectory_path = 'data/1-dof/trajectory3';
+trajectory_path = 'data/1-dof/trajectory2';
 [position, velocity, acceleration, time] = load_trajectory(trajectory_path);
 [position, velocity, acceleration] = looping_splines(position, time);
 
@@ -131,30 +131,27 @@ subplot(3,1,3);
 plot(time_axis(1, starting_i:finishing_i), reference_acc(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_acc(1, starting_i:finishing_i));
 legend ("reference acc", "filtered acceleration")
 
-for j=1:i-1
-    Y = Y_matrix_1dof(reference_pos(j), reference_acc(j));
-    a = get_1dof_coefficients(5,0.5,5*(8.417e-02));
-    reference_torque(j) = Y*a;
-end
-
 filtered_torque = filtfilt(filt, measured_torque);
 
-figure('Name', 'Torques');
-subplot(1,1,1);
-plot(time_axis(1, starting_i:finishing_i), reference_torque(1, starting_i:finishing_i), time_axis(1, starting_i:finishing_i), filtered_torque(1, starting_i:finishing_i));
-legend ("reference torque", "filtered torque")
 
-Y_1dof = zeros(finishing_i-starting_i+1,2);
-u_1dof = zeros(finishing_i-starting_i+1,1);
+load('results/1-dof/experiment_easy1/results.mat', 'optimal_solution')
 
 j = 1;
 for k=starting_i:finishing_i
-    Y_1dof(j, :) = Y_matrix_1dof(measured_pos(k), filtered_acc(k));
-    u_1dof(j,:) = filtered_torque(k);
+    Y = Y_matrix_1dof(measured_pos(k), filtered_acc(k));
+    u_1dof(j) = filtered_torque(k);
+    validation_a = get_1dof_coefficients(optimal_solution(1),optimal_solution(2),optimal_solution(3));
+    validation_torque(j) = Y*validation_a;
+    
     j = j+1;
 end
 
-coefficients = pinv(Y_1dof)*u_1dof;
-error = norm(coefficients-a)
+
+figure('Name', 'Torques');
+subplot(1,1,1);
+plot(time_axis(1, starting_i:finishing_i), u_1dof, time_axis(1, starting_i:finishing_i), validation_torque, time_axis(1, starting_i:finishing_i), u_1dof-validation_torque);
+legend ("nominal torque", "validation torque","error torque");
+xlabel("time (s)");
+ylabel("torque (Nm)");
 
 disp('Finish!');
