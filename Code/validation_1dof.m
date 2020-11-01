@@ -13,7 +13,7 @@ addpath("functions/");
 % 
 % period = 20;
 
-[position, velocity, acceleration, time] = load_trajectory('data/1-dof/new_trajectory2');
+[position, velocity, acceleration, time] = load_trajectory('data/1-dof/trajectory2');
 
 [position, velocity, acceleration] = looping_splines(position, time);
 
@@ -57,7 +57,7 @@ for j=1:length(timestamps)
     u_stack(j,:) = nominal_torque(j);
 end
 
-load('results/1-dof/new_experiment_easy1/results.mat', 'optimal_solution')
+load('results/1-dof/experiment_easy1/results.mat', 'optimal_solution')
 
 Y_stack_validation = zeros((length(timestamps)),2);
 u_stack_validation = zeros((length(timestamps)),1);

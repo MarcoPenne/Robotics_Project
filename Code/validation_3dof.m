@@ -7,9 +7,9 @@ addpath("functions/");
 % GENERATE EXCITING TRAJECTORY
 %------------------------
  
-[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/new_trajectory7');
-[position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/new_trajectory8');
-[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/new_trajectory9');
+[position1, velocity1, acceleration1, time1] = load_trajectory('data/3-dof/trajectory7');
+[position2, velocity2, acceleration2, time2] = load_trajectory('data/3-dof/trajectory8');
+[position3, velocity3, acceleration3, time3] = load_trajectory('data/3-dof/trajectory9');
 
 time_tmp = [time1; time2; time3];
 position_tmp = [position1; position2; position3];
@@ -75,7 +75,7 @@ for j=1:length(timestamps)
     u_stack(j*3-2:j*3,:) = nominal_torque(:, j);
 end
 
-load('results/3-dof/new_experiment123/results.mat', 'optimal_solution')
+load('results/3-dof/experiment123/results.mat', 'optimal_solution')
 
 Y_stack_validation = zeros((length(timestamps))*3,10);
 u_stack_validation = zeros((length(timestamps))*3,1);
