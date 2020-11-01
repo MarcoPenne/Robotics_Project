@@ -89,8 +89,8 @@ for j=1:length(timestamps)
     u_stack_validation(j*3-2:j*3,:) = validation_torque(:, j);
 end
 
-coefficients = pinv(Y_stack)*u_stack
-validation_coefficients = pinv(Y_stack_validation)*u_stack_validation
+coefficients = nominal_a
+validation_coefficients = validation_a
 error = norm(coefficients-validation_coefficients)
 
 figure('Name', 'Torques');
