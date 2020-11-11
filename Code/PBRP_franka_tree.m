@@ -6,19 +6,10 @@ addpath('functions');
 
 num_of_joints = 7; % DoFs of the Franka Emika Panda robot
 
-% load numerical evaluated regressor and symbolic dynamic coefficients,
-% useful for final cross-validation and in case use_complete_regressor =
-% true.
-%
-% In particular:
-%  - Y_stack_LI contains a stacked evaluated regressor (exciting
-%  trajectories have been used)
-%  - tau_stack contains the vector of stacked measurements (joint
-%  torques)
-%  - P_li_full contains the symbolic dynamic coefficients vector, with
-%  the inertia tensors expressed w.r.t. link frames
-%  - P_li_full_subs contains the symbolic dynamic coefficients vector,
-%  with the inertia tensors expressed w.r.t. link CoMs
+% compute the signs of the best and the worst case, than performs 2 optimization problems.
+% If you feel lucky, try to set complete to false: it will compute only one
+% problem and print results
+complete = true;
 
 % total samples retrieved during exciting trajectories
 load('data/franka_emika_panda/regressor_and_pars_data.mat', 'Y_stack_LI')
@@ -132,11 +123,14 @@ indices5 = indices_long5;
 indices6 = indices_long6;
 indices7 = indices_long7;
 
-[Y_final, u_final, signs] = tree_franka(Y1_stack, Y2_stack, Y3_stack, Y4_stack, Y5_stack, Y6_stack, Y7_stack,...
+[Y_final_tensor, u_final_tensor, signs_tensor] = tree_franka_classic(Y1_stack, Y2_stack, Y3_stack, Y4_stack, Y5_stack, Y6_stack, Y7_stack,...
                         tau1_abs, tau2_abs, tau3_abs, tau4_abs, tau5_abs, tau6_abs, tau7_abs,...
                         indices1, indices2, indices3, indices4, indices5, indices6, indices7,...
                         LB, UB, 30, 5);
 
+Y_final = Y_final_tensor{1};
+u_final = u_final_tensor{1};
+signs = signs_tensor{1};
 %----------------------------------
 % initializations
 %----------------------------------
@@ -186,11 +180,84 @@ for i=1:num_of_runs
   
 end
 
-% retrieve optimal solution
-min_idx = find(LOSSES==min(LOSSES));
-optimal_solution = SOL(:,min_idx);
+% DO YOU WANT TO PERFORM ALSO THE OTHER CASE?
+if complete
+    
+    % retrieve optimal solution
+    min_idx1 = find(LOSSES==min(LOSSES));
+    optimal_solution1 = SOL(:,min_idx);
+    loss1 = min(LOSSES);
+    %--------------------%
+    Y_final = Y_final_tensor{2};
+    u_final = u_final_tensor{2};
+    signs = signs_tensor{2};
+    %----------------------------------
+    % initializations
+    %----------------------------------
+    num_of_runs = 3; % independent (parallelizable) runs of the entire algorithm (29)
+    num_of_SA_steps = 3; % successive runs of the algorithm (29). It is the variable \kappa in (29)
 
+    num_x = length(LB); % number of parameters
 
+    % LOSSES vector contains the values of the loss functions for each
+    % independent run in num_of_runs. They are initialized to +infinity
+    LOSSES = Inf*ones(num_of_runs,1);
+
+    % SOL vector contains the solution (that is, the estimated values of the
+    % dynamic parameters) for each independent run in num_of_runs
+    SOL = zeros(num_x,num_of_runs);
+
+    % OUTPUTS and EXITFLAGS are variables related to 'simulannealbnd' Matlab
+    % function
+    OUTPUTS = cell(num_of_runs,1);
+    EXITFLAGS = zeros(num_of_runs,1);
+
+    %----------------------------------
+    % optimizator: Simulated Annealing
+    %----------------------------------
+
+    for i=1:num_of_runs
+        for SA_step=1:num_of_SA_steps
+            stringtodisp = sprintf('RUN %d of %d, SA_step %d of %d',i,num_of_runs, SA_step, num_of_SA_steps);
+            disp(stringtodisp);
+            if SA_step==1
+                X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
+            end
+
+            options = optimoptions('patternsearch','Display', 'off', 'UseParallel',true); % use Nelder-Mead optimization as hybrid function
+
+           [X,FVAL,EXITFLAG,OUTPUT] = patternsearch(@(x) error_fcn_gM_LMI_regressor_franka(x, Y_final, u_final, SA_step), X0, [], [], [], [],LB,UB,[],options);
+
+            X0 = X;
+        end
+        disp('---------------------------');
+        disp(sprintf('.........LOSS = %f',FVAL));
+        disp('---------------------------');
+        LOSSES(i) = FVAL;
+        SOL(:,i) = X;
+        OUTPUTS{i} = OUTPUT;
+        EXITFLAGS(i) = EXITFLAG;
+
+    end
+
+    % retrieve optimal solution
+    min_idx2 = find(LOSSES==min(LOSSES));
+    optimal_solution2 = SOL(:,min_idx);
+    loss2 = min(LOSSES);
+    if loss1 <= loss2
+        min_idx = min_idx1;
+        optimal_solution = optimal_solution1;
+        loss = loss1;
+    else
+        min_idx = min_idx2;
+        optimal_solution = optimal_solution2;
+        loss = loss2;
+    end
+else
+    min_idx = find(LOSSES==min(LOSSES));
+    optimal_solution = SOL(:,min_idx);
+    loss = min(LOSSES);
+end
 %----------------------------------
 % Self-validation
 %----------------------------------
@@ -410,3 +477,156 @@ disp('The estimated dynamic coefficients with torque signs are using classical a
 disp(a_franka)
 disp('The norm of the difference between estimated dynamic coefficients w/o torque signs and ground values is:')
 disp(error_measure)
+
+u1_segments = {};
+u2_segments = {};
+u3_segments = {};
+u4_segments = {};
+u5_segments = {};
+u6_segments = {};
+u7_segments = {};
+
+
+total_segments1 = 0;
+correct_segments1 = 0;
+correct_signs1 = 0;
+
+n_segments1 = size(indices1,1);
+n_segments2 = size(indices2,1);
+n_segments3 = size(indices3,1);
+n_segments4 = size(indices4,1);
+n_segments5 = size(indices5,1);
+n_segments6 = size(indices6,1);
+n_segments7 = size(indices7,1);
+
+for i=1:n_segments1
+    u1_segments{i} = tau1_stack(indices1(i, 1):indices1(i, 2));
+    total_segments1 = total_segments1 + 1;
+    if ~any(diff(sign(u1_segments{i}(u1_segments{i}~=0))))
+        correct_segments1 = correct_segments1 + 1;
+        if signs{1}(i)*u1_segments{i}(1) > 0
+            correct_signs1 = correct_signs1 + 1;
+        end
+    end   
+end
+
+total_segments2 = 0;
+correct_segments2 = 0;
+correct_signs2 = 0;
+
+for i=1:n_segments2
+    u2_segments{i} = tau2_stack(indices2(i, 1):indices2(i, 2));
+    total_segments2 = total_segments2 + 1;
+    if ~any(diff(sign(u2_segments{i}(u2_segments{i}~=0))))
+        correct_segments2 = correct_segments2 + 1;
+        if signs{2}(i)*u2_segments{i}(1) > 0
+            correct_signs2 = correct_signs2 + 1;
+        end
+    end   
+end
+
+total_segments3 = 0;
+correct_segments3 = 0;
+correct_signs3 = 0;
+
+for i=1:n_segments3
+    u3_segments{i} = tau3_stack(indices3(i, 1):indices3(i, 2));
+    total_segments3 = total_segments3 + 1;
+    if ~any(diff(sign(u3_segments{i}(u3_segments{i}~=0))))
+        correct_segments3 = correct_segments3 + 1;
+        if signs{3}(i)*u3_segments{i}(1) > 0
+            correct_signs3 = correct_signs3 + 1;
+        end
+    end   
+end
+
+total_segments4 = 0;
+correct_segments4 = 0;
+correct_signs4 = 0;
+
+for i=1:n_segments4
+    u4_segments{i} = tau4_stack(indices4(i, 1):indices4(i, 2));
+    total_segments4 = total_segments4 + 1;
+    if ~any(diff(sign(u4_segments{i}(u4_segments{i}~=0))))
+        correct_segments4 = correct_segments4 + 1;
+        if signs{4}(i)*u4_segments{i}(1) > 0
+            correct_signs4 = correct_signs4 + 1;
+        end
+    end   
+end
+
+total_segments5 = 0;
+correct_segments5 = 0;
+correct_signs5 = 0;
+
+for i=1:n_segments5
+    u5_segments{i} = tau5_stack(indices5(i, 1):indices5(i, 2));
+    total_segments5 = total_segments5 + 1;
+    if ~any(diff(sign(u5_segments{i}(u5_segments{i}~=0))))
+        correct_segments5 = correct_segments5 + 1;
+        if signs{5}(i)*u5_segments{i}(1) > 0
+            correct_signs5 = correct_signs5 + 1;
+        end
+    end   
+end
+
+total_segments6 = 0;
+correct_segments6 = 0;
+correct_signs6 = 0;
+
+for i=1:n_segments6
+    u6_segments{i} = tau6_stack(indices6(i, 1):indices6(i, 2));
+    total_segments6 = total_segments6 + 1;
+    if ~any(diff(sign(u6_segments{i}(u6_segments{i}~=0))))
+        correct_segments6 = correct_segments6 + 1;
+        if signs{6}(i)*u6_segments{i}(1) > 0
+            correct_signs6 = correct_signs6 + 1;
+        end
+    end   
+end
+
+total_segments7 = 0;
+correct_segments7 = 0;
+correct_signs7 = 0;
+
+for i=1:n_segments7
+    u7_segments{i} = tau7_stack(indices7(i, 1):indices7(i, 2));
+    total_segments7 = total_segments7 + 1;
+    if ~any(diff(sign(u7_segments{i}(u7_segments{i}~=0))))
+        correct_segments7 = correct_segments7 + 1;
+        if signs{7}(i)*u7_segments{i}(1) > 0
+            correct_signs7 = correct_signs7 + 1;
+        end
+    end   
+end
+
+acc_seg1 = correct_segments1/total_segments1;
+acc_seg2 = correct_segments2/total_segments2;
+acc_seg3 = correct_segments3/total_segments3;
+acc_seg4 = correct_segments4/total_segments4;
+acc_seg5 = correct_segments5/total_segments5;
+acc_seg6 = correct_segments6/total_segments6;
+acc_seg7 = correct_segments7/total_segments7;
+
+acc_seg_total = (correct_segments1+correct_segments2+correct_segments3+correct_segments4+correct_segments5+correct_segments6+correct_segments7)/(total_segments1+total_segments2+total_segments3+total_segments4+total_segments5+total_segments6+total_segments7);
+
+acc_seg_table = table(acc_seg1,acc_seg2,acc_seg3,acc_seg4,acc_seg5,acc_seg6,acc_seg7,acc_seg_total, 'VariableNames', {'Torque 1','Torque 2','Torque 3','Torque 4','Torque 5','Torque 6','Torque 7','Total'},'RowNames',{'Accuracy on segments'})
+
+acc_sign1 = correct_signs1/correct_segments1;
+acc_sign2 = correct_signs2/correct_segments2;
+acc_sign3 = correct_signs3/correct_segments3;
+acc_sign4 = correct_signs4/correct_segments4;
+acc_sign5 = correct_signs5/correct_segments5;
+acc_sign6 = correct_signs6/correct_segments6;
+acc_sign7 = correct_signs7/correct_segments7;
+
+
+acc_sign_total = (correct_signs1+correct_signs2+correct_signs3+correct_signs4+correct_signs5+correct_signs6+correct_signs7)/(correct_segments1+correct_segments2+correct_segments3+correct_segments4+correct_segments5+correct_segments6+correct_segments7);
+
+acc_sign_table = table(acc_sign1,acc_sign2,acc_sign3,acc_sign4,acc_sign5,acc_sign6,acc_sign7,acc_sign_total, 'VariableNames', {'Torque 1','Torque 2','Torque 3','Torque 4','Torque 5','Torque 6','Torque 7','Total'},'RowNames',{'Accuracy on signs'})
+
+
+% Save things
+save 'results/franka/results/results' optimal_solution estimated_coefficients error_measure acc_seg_table acc_sign_table
+saveas(gcf,'results/franka/results/results.png')
+saveas(gcf,'results/franka/results/results.fig')
