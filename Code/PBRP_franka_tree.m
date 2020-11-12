@@ -185,7 +185,7 @@ if complete
     
     % retrieve optimal solution
     min_idx1 = find(LOSSES==min(LOSSES));
-    optimal_solution1 = SOL(:,min_idx);
+    optimal_solution1 = SOL(:,min_idx1);
     loss1 = min(LOSSES);
     %--------------------%
     Y_final = Y_final_tensor{2};
@@ -242,7 +242,7 @@ if complete
 
     % retrieve optimal solution
     min_idx2 = find(LOSSES==min(LOSSES));
-    optimal_solution2 = SOL(:,min_idx);
+    optimal_solution2 = SOL(:,min_idx2);
     loss2 = min(LOSSES);
     if loss1 <= loss2
         min_idx = min_idx1;
