@@ -130,7 +130,6 @@ indices7 = indices_long7;
 
 Y_final = Y_final_tensor{1};
 u_final = u_final_tensor{1};
-signs = signs_tensor{1};
 %----------------------------------
 % initializations
 %----------------------------------
@@ -179,85 +178,79 @@ for i=1:num_of_runs
     EXITFLAGS(i) = EXITFLAG;
   
 end
-
-% DO YOU WANT TO PERFORM ALSO THE OTHER CASE?
-if complete
     
-    % retrieve optimal solution
-    min_idx1 = find(LOSSES==min(LOSSES));
-    optimal_solution1 = SOL(:,min_idx1);
-    loss1 = min(LOSSES);
-    %--------------------%
-    Y_final = Y_final_tensor{2};
-    u_final = u_final_tensor{2};
-    signs = signs_tensor{2};
-    %----------------------------------
-    % initializations
-    %----------------------------------
-    num_of_runs = 3; % independent (parallelizable) runs of the entire algorithm (29)
-    num_of_SA_steps = 3; % successive runs of the algorithm (29). It is the variable \kappa in (29)
+% retrieve optimal solution
+min_idx1 = find(LOSSES==min(LOSSES));
+optimal_solution1 = SOL(:,min_idx1);
+loss1 = min(LOSSES);
+%--------------------%
+Y_final = Y_final_tensor{2};
+u_final = u_final_tensor{2};
+%----------------------------------
+% initializations
+%----------------------------------
+num_of_runs = 3; % independent (parallelizable) runs of the entire algorithm (29)
+num_of_SA_steps = 3; % successive runs of the algorithm (29). It is the variable \kappa in (29)
 
-    num_x = length(LB); % number of parameters
+num_x = length(LB); % number of parameters
 
-    % LOSSES vector contains the values of the loss functions for each
-    % independent run in num_of_runs. They are initialized to +infinity
-    LOSSES = Inf*ones(num_of_runs,1);
+% LOSSES vector contains the values of the loss functions for each
+% independent run in num_of_runs. They are initialized to +infinity
+LOSSES = Inf*ones(num_of_runs,1);
 
-    % SOL vector contains the solution (that is, the estimated values of the
-    % dynamic parameters) for each independent run in num_of_runs
-    SOL = zeros(num_x,num_of_runs);
+% SOL vector contains the solution (that is, the estimated values of the
+% dynamic parameters) for each independent run in num_of_runs
+SOL = zeros(num_x,num_of_runs);
 
-    % OUTPUTS and EXITFLAGS are variables related to 'simulannealbnd' Matlab
-    % function
-    OUTPUTS = cell(num_of_runs,1);
-    EXITFLAGS = zeros(num_of_runs,1);
+% OUTPUTS and EXITFLAGS are variables related to 'simulannealbnd' Matlab
+% function
+OUTPUTS = cell(num_of_runs,1);
+EXITFLAGS = zeros(num_of_runs,1);
 
-    %----------------------------------
-    % optimizator: Simulated Annealing
-    %----------------------------------
+%----------------------------------
+% optimizator: Simulated Annealing
+%----------------------------------
 
-    for i=1:num_of_runs
-        for SA_step=1:num_of_SA_steps
-            stringtodisp = sprintf('RUN %d of %d, SA_step %d of %d',i,num_of_runs, SA_step, num_of_SA_steps);
-            disp(stringtodisp);
-            if SA_step==1
-                X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
-            end
-
-            options = optimoptions('patternsearch','Display', 'off', 'UseParallel',true); % use Nelder-Mead optimization as hybrid function
-
-           [X,FVAL,EXITFLAG,OUTPUT] = patternsearch(@(x) error_fcn_gM_LMI_regressor_franka(x, Y_final, u_final, SA_step), X0, [], [], [], [],LB,UB,[],options);
-
-            X0 = X;
+for i=1:num_of_runs
+    for SA_step=1:num_of_SA_steps
+        stringtodisp = sprintf('RUN %d of %d, SA_step %d of %d',i,num_of_runs, SA_step, num_of_SA_steps);
+        disp(stringtodisp);
+        if SA_step==1
+            X0 = rand(num_x,1).*(UB-LB) + LB; % random initial point inside bounds
         end
-        disp('---------------------------');
-        disp(sprintf('.........LOSS = %f',FVAL));
-        disp('---------------------------');
-        LOSSES(i) = FVAL;
-        SOL(:,i) = X;
-        OUTPUTS{i} = OUTPUT;
-        EXITFLAGS(i) = EXITFLAG;
 
-    end
+        options = optimoptions('patternsearch','Display', 'off', 'UseParallel',true); % use Nelder-Mead optimization as hybrid function
 
-    % retrieve optimal solution
-    min_idx2 = find(LOSSES==min(LOSSES));
-    optimal_solution2 = SOL(:,min_idx2);
-    loss2 = min(LOSSES);
-    if loss1 <= loss2
-        min_idx = min_idx1;
-        optimal_solution = optimal_solution1;
-        loss = loss1;
-    else
-        min_idx = min_idx2;
-        optimal_solution = optimal_solution2;
-        loss = loss2;
+       [X,FVAL,EXITFLAG,OUTPUT] = patternsearch(@(x) error_fcn_gM_LMI_regressor_franka(x, Y_final, u_final, SA_step), X0, [], [], [], [],LB,UB,[],options);
+
+        X0 = X;
     end
-else
-    min_idx = find(LOSSES==min(LOSSES));
-    optimal_solution = SOL(:,min_idx);
-    loss = min(LOSSES);
+    disp('---------------------------');
+    disp(sprintf('.........LOSS = %f',FVAL));
+    disp('---------------------------');
+    LOSSES(i) = FVAL;
+    SOL(:,i) = X;
+    OUTPUTS{i} = OUTPUT;
+    EXITFLAGS(i) = EXITFLAG;
+
 end
+
+% retrieve optimal solution
+min_idx2 = find(LOSSES==min(LOSSES));
+optimal_solution2 = SOL(:,min_idx2);
+loss2 = min(LOSSES);
+if loss1 <= loss2
+    min_idx = min_idx1;
+    optimal_solution = optimal_solution1;
+    loss = loss1;
+    signs = signs_tensor{1};
+else
+    min_idx = min_idx2;
+    optimal_solution = optimal_solution2;
+    loss = loss2;
+    signs = signs_tensor{2};
+end
+
 %----------------------------------
 % Self-validation
 %----------------------------------
