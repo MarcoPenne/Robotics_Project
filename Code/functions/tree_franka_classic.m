@@ -61,35 +61,33 @@ function [Y_final, u_final, new_signs_finals] = tree_franka_classic(Y1, Y2, Y3, 
     %save ws Y_segments u_segments
     
     % finding minimum amount of segments that make Y well conditioned
+    i=1;
+    ij_order = nchoosek(1:n_segments, i);
+    ij_order = ij_order(randperm(size(ij_order,1)),:);
+    
     best_condition = Inf;
-    best_condition_indices = [1];
-    i=7;
-    ij_order = [];
-    while best_condition > 1e22
-        best_condition = Inf;
-        %ij_order = nchoosek(1:n_segments, i);
-        %ij_order = ij_order(randperm(size(ij_order,1)),:);
-        ij_order(1, :) = [1, 1+n_segments1, 1+n_segments1+n_segments2, 1+n_segments1+n_segments2+n_segments3, 1+n_segments1+n_segments2+n_segments3+n_segments4, 1+n_segments1+n_segments2+n_segments3+n_segments4+n_segments5, 1+n_segments1+n_segments2+n_segments3+n_segments4+n_segments5+n_segments6];
-        disp("Finding among "+size(ij_order, 1)+" segments permutation");
-        for n=1:length(ij_order)
-            ij = ij_order(n, :);
-            Y_tmp = [];
-            for l=1:length(ij)
-                Y_tmp = [Y_tmp; Y_segments{ij(l)}];
-            end
-            c = cond(Y_tmp);
-            disp("condition is "+c);
-            if c<best_condition
-                best_condition = c;
-                best_condition_indices = ij;
-            end
-            if best_condition < 1e22
-                break
-            end
+    best_condition_indices = [randi([1 size(ij_order,1)],1,1)];
+    
+    best_condition = Inf;
+    
+    %ij_order(1, :) = [1, 1+n_segments1, 1+n_segments1+n_segments2, 1+n_segments1+n_segments2+n_segments3, 1+n_segments1+n_segments2+n_segments3+n_segments4, 1+n_segments1+n_segments2+n_segments3+n_segments4+n_segments5, 1+n_segments1+n_segments2+n_segments3+n_segments4+n_segments5+n_segments6];
+    disp("Finding among "+size(ij_order, 1)+" segments permutation");
+    for n=1:length(ij_order)
+        ij = ij_order(n, :);
+        Y_tmp = [];
+        for l=1:length(ij)
+            Y_tmp = [Y_tmp; Y_segments{ij(l)}];
         end
-        disp("Best condition with "+i+" segments is "+best_condition);
-        i = i+1;
+        c = cond(Y_tmp);
+        %disp("condition is "+c);
+        if c<best_condition
+            disp("Found new best! "+c)
+            best_condition = c;
+            best_condition_indices = ij;
+        end
     end
+    disp("Best condition with "+i+" segments is "+best_condition);
+    
     disp("Found well-defined problem using segments")
     disp(best_condition_indices)
     for l=1:length(best_condition_indices)
@@ -106,10 +104,15 @@ function [Y_final, u_final, new_signs_finals] = tree_franka_classic(Y1, Y2, Y3, 
         Y_now = [Y_now; Y_segments{best_condition_indices(l)}];
     end
     disp("Generating order")
+    initializing_length = 1;
+    threshold = 1e10;
+    is_under_threshold = false;
     for k=1:n_segments-length(best_condition_indices)
+        
         best_condition = Inf;
-        best_condition_index = 0;
-        best_condition_index_reman = 0;
+        best_condition_index_reman = randi([1 length(remaining_segments)],1,1);
+        best_condition_index = remaining_segments(best_condition_index_reman);
+        
         for i=1:length(remaining_segments)
             j = remaining_segments(i);
             c = cond([Y_now; Y_segments{j}]);
@@ -117,33 +120,41 @@ function [Y_final, u_final, new_signs_finals] = tree_franka_classic(Y1, Y2, Y3, 
                 best_condition = c;
                 best_condition_index = j;
                 best_condition_index_reman = i;
+                if c<threshold && ~is_under_threshold
+                    is_under_threshold = true;
+                    initializing_length = initializing_length+1;
+                end
             end
         end
         permuted_order(end+1) = best_condition_index;
         Y_now = [Y_now; Y_segments{best_condition_index}];
         remaining_segments(best_condition_index_reman) = [];
+        if ~is_under_threshold
+            initializing_length = initializing_length+1;
+        end
     end
     %permuted_order = remaining_segments;
     disp(permuted_order)
     
+    %initializing_length = 7;
     
     %initializing problem
-    disp("INITIALIZING DATA STRUCTURES WITH WELL-DEFINED PROBLEM ("+length(best_condition_indices)+" segments)...")
+    disp("INITIALIZING DATA STRUCTURES WITH WELL-DEFINED PROBLEM ("+initializing_length+" segments)...")
     LOSSES = [];
     SIGNS = {};
     RESULTS = {};
     Y = {};
     U = {};
     Y_now = [];
-    for j=1:length(best_condition_indices)
+    for j=1:initializing_length
         Y_now = [Y_now; Y_segments{permuted_order(j)}];
     end
     signs_now = zeros(1, n_segments);
-    for i=0:2^length(best_condition_indices)-1
-        bits = flip(dec2bin(i, length(best_condition_indices)));
+    for i=0:2^initializing_length-1
+        bits = flip(dec2bin(i, initializing_length));
         % creating U
         U_now = [];
-        for j=1:length(best_condition_indices)
+        for j=1:initializing_length
             if bits(j)=='0'
                 U_now = [U_now; -u_segments{permuted_order(j)}];
                 signs_now(permuted_order(j)) = -1;
@@ -190,7 +201,7 @@ function [Y_final, u_final, new_signs_finals] = tree_franka_classic(Y1, Y2, Y3, 
     RESULTS = {};
     Y = {};
     U = {};
-    for k = length(best_condition_indices)+1:length(permuted_order)
+    for k = initializing_length+1:length(permuted_order)
         i = permuted_order(k);
         
         string2disp = sprintf("PROCESSING SEGMENT %d/%d  (%d)", k, n_segments, i);
