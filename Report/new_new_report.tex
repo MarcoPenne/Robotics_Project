@@ -547,13 +547,13 @@ In the following plot the results of this modified algorithm on the Franka Emika
 \FloatBarrier
 \begin{figure}
 \centering
-\includegraphics[width=1\textwidth]{images/franka_result.png}
+\includegraphics[width=1\textwidth]{images/franka_result.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
 
-We can see that the algorithm has bees able to correctly identify 103 segment signs out of 105.\\
-The norm of the difference between the retrieved coefficients and the ones estimated with a reverse engineering approach is 5.3539.
+We can see that the algorithm has bees able to correctly identify 105 segment signs out of 105.\\
+The norm of the difference between the retrieved coefficients and the ones estimated with the classical approach (if one has the sign information) is 0.3980.
 
 \section{V-REP}
 In this section we show the V-REP scenes for our two robots.
