@@ -22,10 +22,26 @@
 % \sectionfont{\centering}
 \usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm]{geometry}
 \title{\textbf{Robotics II} \\ \large{\textbf{Final Project}}}
-\author{Marco Pennese 1749223, Veronica Vulcano 1760405}
 \date{}
 
 \begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \includegraphics[width=0.2 \textwidth] {images/logo.eps}\\
+        \vspace{10 em}
+        {\Large \textbf{Report for the final project of Robotics II course}}\\
+        \vspace{3em}
+        {\Large \textsc{Academic Year 2019/2020}}\\
+        \vspace{6 em}
+        {\huge \textbf{Dynamic identification of robot dynamics from motor torques w/o signs}}\\
+        \vspace{3 em}
+        {\large Marco Pennese, 1749223}\\
+        {\large Veronica Vulcano, 1760405}
+        \vspace{10 em}
+    \end{center}
+\end{titlepage}
+
 \maketitle
 \tableofcontents
 \pagebreak
@@ -34,6 +50,8 @@
 \paragraph{}The goal of our work is to perform the dynamic identification of a robot, estimating its dynamic parameters/coefficients by solving an optimization problem. As we know, it is very important to have an accurate dynamic model because it allows us to implement better control laws for achieving many tasks.
 \paragraph{}In particular, we have dealt with the problem of torque sign lack, as it happens in some real robot (e.g., KUKA KR5). In fact, when we know only the absolute value of torque and we do not have the knowledge about the torque sign, we cannot use traditional methods for dynamic identification. For this reason, we have developed an algorithm able to estimate torque signs so that we could proceed with the identification using well known strategies.
 \paragraph{}In our work, we first studied a simple 1R robot under gravity; then, we moved to a more complex robot, a 3R spatial robot. For both of them, we are now reporting the procedure we followed, the simulations and the results of our experiments.\\
+
+Finally, we developed a fast version of the algorithm so as to apply it to a real robot, the Franka Emika Panda, which is the one studied in the paper \emph{Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization} (Gaz, Cognetti, Oliva, Giordano, De Luca).\\
 
 The repository of our work is available here \url{https://github.com/MarcoPenne/Robotics_Project}.
 
@@ -166,18 +184,23 @@ We remember that:
 \pi_1 \\ \pi_2
 \end{bmatrix} = \begin{bmatrix}
 gmd \\ I +md^2
-\end{bmatrix}= \begin{bmatrix}
-24.5250 \\ 1.6709
 \end{bmatrix}\]
 
 The estimated dynamic coefficients are:
 
-\[\bm{\hat{\pi}}= \begin{bmatrix}
-\hat{\pi}_1 \\\hat{ \pi}_2
-\end{bmatrix} =
-\begin{bmatrix}
-24.5250 \\ 1.6709
-\end{bmatrix}\]
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|cc|}
+\hline
+& Ground truth & Retrieved\\
+\hline
+$\pi_1$ & 24.5250 & 24.5250\\ 
+$\pi_2$ & 1.6709 & 1.6709\\
+\hline
+\end{tabular}
+\caption{Dynamic coefficients}
+\end{table}
+\FloatBarrier
 
 Even if there is a slightly difference between the ground dynamic parameters and the estimated ones, we obtain the same dynamic coefficients. As a measure of the error, we take the norm of the difference between the ground values of the dynamic coefficients and the estimated ones; in this experiment, we obtain an error equal to $1.6410\cdot10^{-5}$.
 
@@ -216,12 +239,19 @@ $I\;[kg\cdot m^2]$ & 0.4208 & 0.7316\\
 
 The estimated dynamic coefficients are:
 
-\[\bm{\hat{\pi}}= \begin{bmatrix}
-\hat{\pi}_1 \\\hat{ \pi}_2
-\end{bmatrix} =
-\begin{bmatrix}
-24.5295 \\ 1.7132
-\end{bmatrix}\]
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|cc|}
+\hline
+& Ground truth & Retrieved\\
+\hline
+$\pi_1$ & 24.5250 & 24.5295\\ 
+$\pi_2$ & 1.6709 & 1.7132\\
+\hline
+\end{tabular}
+\caption{Dynamic coefficients}
+\end{table}
+\FloatBarrier
 
 In this case, we do not obtain the exactly same values of the dynamic coefficients; this is reflected in the value of the error, which is larger than before ($4.2554 \cdot 10^{-2}$).
 
@@ -262,12 +292,19 @@ $I\;[kg\cdot m^2]$ & 0.4208 & 0.8417\\
 
 The estimated dynamic coefficients are:
 
-\[\bm{\hat{\pi}}= \begin{bmatrix}
-\hat{\pi}_1 \\\hat{ \pi}_2
-\end{bmatrix} =
-\begin{bmatrix}
-24.5250 \\ 1.6708
-\end{bmatrix}\]
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|cc|}
+\hline
+& Ground truth & Retrieved\\
+\hline
+$\pi_1$ & 24.5250 & 24.5250\\ 
+$\pi_2$ & 1.6709 & 1.6708\\
+\hline
+\end{tabular}
+\caption{Dynamic coefficients}
+\end{table}
+\FloatBarrier
 
 With this experiment, we obtain almost the same dynamics coefficients; the error we get, which is equal to $2.0259\cdot10^{-6}$, is the smallest among all the experiments.  The fact that the error is smaller than the previous cases means that the system has been excited appropriately.
 
@@ -387,16 +424,20 @@ To compute the dynamic model of the robot we followed these steps:
 \end{itemize}
 Once we obtained the dynamic model of the robot, we found a minimal representation of the model. The dynamic coefficients we found are given by:
 
-\[\pi_1= I_{1,yy} + m_2 (c+ d_2)^2 + m_3 d_2^2 + I_{2,xx} + I_{3,xx} = 0.0363\]
-\[\pi_2 = m_2(L_2 -b)^2 + m_3 L_2^2 + I_{2,yy} - I_{2,xx} = 0.1010\]
-\[\pi_3 = I_{3,yy} + m_3(L_3 - d)^2 - I_{3,xx} = 0.0098\]
-\[\pi_4 = m_3(L_3 -d)L_2 = 0.0225\]
-\[\pi_5 = I_{2,zz} + m_2(L_2 - b)^2 + I_{3,zz} + m_3(L_2^2 + (L_3 - d)^2 ) = 0.1116\]
-\[\pi_6 = m_3(L_3 -d)^2 + I_{3,zz} = 0.0102\]
-\[\pi_7 = m_2(L_2 - b)(c+ d_2) + m_3 L_2 d_2 = 0.0456\]
-\[\pi_8 = m_3(L_3 - d)d_2 = 0.0068\]
-\[\pi_9 = g_0 m_2 (L_2 - b) + g_0 m_3 L_2 = 3.8627\]
-\[\pi_{10} = g_0 m_3 (L_3 - d) = 0.7358\]
+\[\bm{\pi}= \begin{bmatrix}
+\pi_1 \\ \pi_2 \\ \pi_3 \\ \pi_4 \\ \pi_5 \\ \pi_6 \\ \pi_7 \\ \pi_8 \\ \pi_9 \\ \pi_{10}
+\end{bmatrix} = \begin{bmatrix}
+I_{1,yy} + m_2 (c+ d_2)^2 + m_3 d_2^2 + I_{2,xx} + I_{3,xx}\\
+m_2(L_2 -b)^2 + m_3 L_2^2 + I_{2,yy} - I_{2,xx}\\
+I_{3,yy} + m_3(L_3 - d)^2 - I_{3,xx}\\
+m_3(L_3 -d)L_2\\
+I_{2,zz} + m_2(L_2 - b)^2 + I_{3,zz} + m_3(L_2^2 + (L_3 - d)^2 )\\
+m_3(L_3 -d)^2 + I_{3,zz}\\
+m_2(L_2 - b)(c+ d_2) + m_3 L_2 d_2\\
+m_3(L_3 - d)d_2\\
+g_0 m_2 (L_2 - b) + g_0 m_3 L_2\\
+g_0 m_3 (L_3 - d)
+\end{bmatrix}\]
 
 \subsection{PBPR algorithm}
 We have extended the procedure for the 1R robot to the 3R case. Since we have more than one joint, we need to add some constraints; this is the complete algorithm:
@@ -477,16 +518,27 @@ $I_{3zz}$ & 0.0025 & 0\\
 
 The estimated dynamic coefficients are:
 
-\[\hat{\pi}_1 = 0.0275\]
-\[\hat{\pi}_2  = 0.0599\]
-\[\hat{\pi}_3 = 0.0148\]
-\[\hat{\pi}_4 = 0.0227\]
-\[\hat{\pi}_5 = 0.0905\]
-\[\hat{\pi}_6 = 0.0148\]
-\[\hat{\pi}_7 = 0.0351\]
-\[\hat{\pi}_8 = 0.0068\]
-\[\hat{\pi}_9 = 3.8295\]
-\[\hat{\pi}_{10} = 0.7431\]
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|cc|}
+\hline
+& Ground truth & Retrieved\\ 
+\hline
+$\pi_1$ & 0.0363 & 0.0275\\
+$\pi_2$ & 0.1010 & 0.0599\\
+$\pi_3$ & 0.0098 & 0.0148\\
+$\pi_4$ &  0.0225 &  0.0227\\
+$\pi_5$ & 0.1116 & 0.0905\\
+$\pi_6$ & 0.0102 & 0.0148\\
+$\pi_7$ & 0.0456 & 0.0351\\
+$\pi_8$ & 0.0068 & 0.0068\\
+$\pi_9$ & 3.8627 & 3.8295\\
+$\pi_{10}$ & 0.7358 & 0.7431\\
+\hline
+\end{tabular}
+\caption{Dynamic coefficients}
+\end{table}
+\FloatBarrier
 
 We do not obtain the exactly same values of the dynamic coefficients; the error we obtain is equal to 0.0594.
 
@@ -543,16 +595,27 @@ $I_{3zz}$ & 0.0025 & 0.0014\\
 
 The estimated dynamic coefficients are:
 
-\[\hat{\pi}_1 = 0.0363\]
-\[\hat{\pi}_2  = 0.1010\]
-\[\hat{\pi}_3 = 0.0099\]
-\[\hat{\pi}_4 = 0.0225\]
-\[\hat{\pi}_5 = 0.1116\]
-\[\hat{\pi}_6 = 0.0102\]
-\[\hat{\pi}_7 = 0.0456\]
-\[\hat{\pi}_8 = 0.0068\]
-\[\hat{\pi}_9 = 3.8627\]
-\[\hat{\pi}_{10} = 0.7358\]
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|cc|}
+\hline
+& Ground truth & Retrieved\\ 
+\hline
+$\pi_1$ & 0.0363 & 0.0363\\
+$\pi_2$ & 0.1010 & 0.1010\\
+$\pi_3$ & 0.0098 & 0.0099\\
+$\pi_4$ &  0.0225 &  0.0225\\
+$\pi_5$ & 0.1116 & 0.1116\\
+$\pi_6$ & 0.0102 & 0.0102\\
+$\pi_7$ & 0.0456 & 0.0456\\
+$\pi_8$ & 0.0068 & 0.0068\\
+$\pi_9$ & 3.8627 & 3.8627\\
+$\pi_{10}$ & 0.7358 & 0.7358\\
+\hline
+\end{tabular}
+\caption{Dynamic coefficients}
+\end{table}
+\FloatBarrier
 
 In this case, the dynamic coefficients retrieved are almost equal to the ground ones, in fact the error we obtain is equal to   $3.3696\cdot10^{-5}$ and is smaller than the previous experiment.
 
@@ -637,10 +700,17 @@ We report the  values for masses and inertia tensors.
 \[ m_2 = 1.125\;kg,\quad I_{xx,2} = 4.6879\cdot10^{-4}\;kg\cdot m^2,\quad I_{yy,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,2} = 8.6715\cdot 10^{-3}\;kg\cdot m^2\]
 \[m_3 = 0.75\;kg,\quad I_{xx,3} = 3.1252\cdot 10^{-4}\;kg\cdot m^2,\quad I_{yy,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2,\quad I_{zz,3} = 2.6565\cdot 10^{-3}\;kg\cdot m^2\]
 
+\clearpage
+
 \section{Conclusions}
 From the results obtained, we can state that the algorithm proposed for torque sign estimation works well. In fact, whenever we have a segment predicted well (that is, in which the sign does not change), the algorithm guess the right  sign. The problem is when the threshold is not identified correctly, but this seldom happens. \\\\
 
-However, we can idenitfy two drawbacks of the proposed algorithm: the first one regards the fact that we discard under-threshold samples (which are at least 10\% of the total); moreover, too short segments are discarded too. The second drawback is that the algorithm becomes slower and slower as the robot complexity increases.
+We can idenitfy two drawbacks of the proposed algorithm. 
+\begin{itemize}
+\item The first one regards the fact that we discard under-threshold samples (which are at least 10\% of the total); moreover, too short segments are discarded too.  However,  we can still obtain good performances of the algorithm even ignoring those data. In fact, since these samples are near to zero, we can imagine that they are poorly informative.
+\item The second drawback is that the algorithm becomes slower and slower as the robot complexity increases. This makes the use of the algorithm inappropriate for real robots. In order to solve this problem, we have speeded up the algorithm thanks to some considerations and the results obtained with this new version are still satisfactory.
+\end{itemize}
+
 \clearpage
 
 \begin{thebibliography}{}
