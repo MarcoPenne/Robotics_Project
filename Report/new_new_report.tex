@@ -122,7 +122,7 @@ gmd \\ I +md^2
 
 By taking the segments independently, it may be the case in which $Y_{seg_k}$ has not full rank. So, we need something to deal with this possibility and always have well defined problems. To compute the order in which the segments will be considered, we choose as heuristic function  the one that computes the condition number of $Y_{seg_k}$. In fact, a problem with a high condition number is said to be ill-conditioned; this means that the solution to the problem is difficult to find. We can define a threshold for the condition number; if the condition number of all $Y_{seg_k}$ is over this threshold, we start considering all the possible pairs $(Y_{seg_j},Y_{seg_k})$; if we are still over-threshold, then we consider groups of three $(Y_{seg_i},Y_{seg_j},Y_{seg_k})$, then four and so on. At this stage, we have a well defined problem from which we can start predicting the torque signs; any problem with fewer segments would not be as good as the one we have.
 
-\paragraph{}After that, we have to predict the torque sign for each segment. The previous step returns the order in which segments should be considered so as the condition number decreases. The idea is: we take the first segment which could be either positive or negative, so we have two possible solutions; then, we take the following segment in the sequence which again could be either positive or negative, so at this stage we have four possible solutions (by considering the previous ones), and so on. This is an exponential problem, so if we have $n$ segments we would have $2^n$ possible solutions. However, it is possible to prevent the tree from being completely expanded because we can recognize in advance when a choice of sign lead to a wrong solution; in fact, when the PBPR algorithm is applied to a torque with the wrong sign, the loss should be higher than the one with the correct sign. So, at each level of the tree, we expand only the best nodes which are the ones with the lowest loss among the segments at disposal (in our case, we decided to expand the best 5 nodes).  For all the optimization problems of the tree we use pattern search algorithm because it is faster. It could happen that by expanding only few nodes per level we cut some potentially good branch; we need this tradeoff to improve the computational time and therefore the performance of the algorithm. In any case, we will notice about this at the end.
+\paragraph{}After that, we have to predict the torque sign for each segment. The previous step returns the order in which segments should be considered so as the condition number decreases. The idea is: we take the first segment which could be either positive or negative, so we have two possible solutions; then, we take the following segment in the sequence which again could be either positive or negative, so at this stage we have four possible solutions (by considering the previous ones), and so on. This is an exponential problem, so if we have $n$ segments we would have $2^n$ possible solutions. However, it is possible to prevent the tree from being completely expanded because we can recognize in advance when a choice of sign lead to a wrong solution; in fact, when the PBPR algorithm is applied to a torque with the wrong sign, the loss should be higher than the one with the correct sign. So, at each level of the tree, we expand only the best nodes which are the ones with the lowest loss among the segments at disposal (in our case, we decided to expand the best 5 nodes).  It could happen that by expanding only few nodes per level we cut some potentially good branch; we need this tradeoff to improve the computational time and therefore the performance of the algorithm. In any case, we will notice about this at the end. For all the optimization problems of the tree we use pattern search algorithm because it is faster.
 
 \paragraph{}At the end of this tree algorithm, we will obtain the best combination of signs for the segments sequence. So, we apply the PBPR algorithm to this sequence with a number of runs equal to 3 using simulated annealing.\\
 
@@ -134,7 +134,7 @@ For our experiments, we start with a very simple trajectory in which the initial
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory_easy1.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory_easy1.eps}
 \caption{Plot of position, velocity and acceleration; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -170,11 +170,20 @@ gmd \\ I +md^2
 24.5250 \\ 1.6709
 \end{bmatrix}\]
 
+The estimated dynamic coefficients are:
+
+\[\bm{\hat{\pi}}= \begin{bmatrix}
+\hat{\pi}_1 \\\hat{ \pi}_2
+\end{bmatrix} =
+\begin{bmatrix}
+24.5250 \\ 1.6709
+\end{bmatrix}\]
+
 Even if there is a slightly difference between the ground dynamic parameters and the estimated ones, we obtain the same dynamic coefficients. As a measure of the error, we take the norm of the difference between the ground values of the dynamic coefficients and the estimated ones; in this experiment, we obtain a really small error equal to $1.6410\cdot10^{-5}$.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/results1.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/results1.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
@@ -183,7 +192,7 @@ Even if there is a slightly difference between the ground dynamic parameters and
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory_easy2.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory_easy2.eps}
 \caption{Plot of position, velocity and acceleration; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -205,11 +214,20 @@ $I\;[kg\cdot m^2]$ & 0.4208 & 0.7316\\
 \end{table}
 \FloatBarrier
 
+The estimated dynamic coefficients are:
+
+\[\bm{\hat{\pi}}= \begin{bmatrix}
+\hat{\pi}_1 \\\hat{ \pi}_2
+\end{bmatrix} =
+\begin{bmatrix}
+24.5295 \\ 1.7132
+\end{bmatrix}\]
+
 In this case, we do not obtain the exactly same values of the dynamic coefficients; however, the error is really small ($4.2554 \cdot 10^{-2}$).
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/results2.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/results2.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
@@ -220,7 +238,7 @@ We implemented a function called generate\_exciting\_traj() that generates a ran
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory1.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/trajectory1.eps}
 \caption{Plot of position, velocity and acceleration; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -242,11 +260,20 @@ $I\;[kg\cdot m^2]$ & 0.4208 & 0.8417\\
 \end{table}
 \FloatBarrier
 
-With this experiment, we obtain almost the same dynamics coefficients with an error equal to $2.0259\cdot10^{-6}$.
+The estimated dynamic coefficients are:
+
+\[\bm{\hat{\pi}}= \begin{bmatrix}
+\hat{\pi}_1 \\\hat{ \pi}_2
+\end{bmatrix} =
+\begin{bmatrix}
+24.5250 \\ 1.6708
+\end{bmatrix}\]
+
+With this experiment, we obtain almost the same dynamics coefficients with an error equal to $2.0259\cdot10^{-6}$. The error is smaller than the previous cases; this means that the system has been excited appropriately.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/results3.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/results3.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
@@ -257,7 +284,7 @@ With this experiment, we obtain almost the same dynamics coefficients with an er
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/validation_trajectory.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/validation_trajectory.eps}
 \caption{Plot of position, velocity and acceleration; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -266,7 +293,7 @@ The predicted torques are:
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/1-dof/validation.png}
+\includegraphics[width=0.7\textwidth]{images/1-dof/validation.eps}
 \caption{Plot of the nominal torque vs validation torque; the error is computed as nominal torque - validation torque}
 \end{figure}
 \FloatBarrier
@@ -360,16 +387,16 @@ To compute the dynamic model of the robot we followed these steps:
 \end{itemize}
 Once we obtained the dynamic model of the robot, we found a minimal representation of the model. The dynamic coefficients we found are given by:
 
-\[\pi_1= I_{1,yy} + m_2 (c+ d_2)^2 + m_3 d_2^2 + I_{2,xx} + I_{3,xx}\]
-\[\pi_2 = m_2(L_2 -b)^2 + m_3 L_2^2 + I_{2,yy} - I_{2,xx}\]
-\[\pi_3 = I_{3,yy} + m_3(L_3 - d)^2 - I_{3,xx}\]
-\[\pi_4 = m_3(L_3 -d)L_2\]
-\[\pi_5 = I_{2,zz} + m_2(L_2 - b)^2 + I_{3,zz} + m_3(L_2^2 + (L_3 - d)^2 )\]
-\[\pi_6 = m_3(L_3 -d)^2 + I_{3,zz}\]
-\[\pi_7 = m_2(L_2 - b)(c+ d_2) + m_3 L_2 d_2\]
-\[\pi_8 = m_3(L_3 - d)d_2\]
-\[\pi_9 = g_0 m_2 (L_2 - b) + g_0 m_3 L_2\]
-\[\pi_{10} = g_0 m_3 (L_3 - d)\]
+\[\pi_1= I_{1,yy} + m_2 (c+ d_2)^2 + m_3 d_2^2 + I_{2,xx} + I_{3,xx} = 0.0363\]
+\[\pi_2 = m_2(L_2 -b)^2 + m_3 L_2^2 + I_{2,yy} - I_{2,xx} = 0.1010\]
+\[\pi_3 = I_{3,yy} + m_3(L_3 - d)^2 - I_{3,xx} = 0.0098\]
+\[\pi_4 = m_3(L_3 -d)L_2 = 0.0225\]
+\[\pi_5 = I_{2,zz} + m_2(L_2 - b)^2 + I_{3,zz} + m_3(L_2^2 + (L_3 - d)^2 ) = 0.1116\]
+\[\pi_6 = m_3(L_3 -d)^2 + I_{3,zz} = 0.0102\]
+\[\pi_7 = m_2(L_2 - b)(c+ d_2) + m_3 L_2 d_2 = 0.0456\]
+\[\pi_8 = m_3(L_3 - d)d_2 = 0.0068\]
+\[\pi_9 = g_0 m_2 (L_2 - b) + g_0 m_3 L_2 = 3.8627\]
+\[\pi_{10} = g_0 m_3 (L_3 - d) = 0.7358\]
 
 \subsection{PBPR algorithm}
 We have extended the procedure for the 1R robot to the 3R case. Since we have more than one joint, we need to add some constraints; this is the complete algorithm:
@@ -410,9 +437,10 @@ After the tree has been built, we have the sequence of most likely signs that we
 The first trajectory generated is:
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/trajectory123.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/trajectory123.eps}
 \caption{Plot of position, velocity and acceleration for each joint; the last two are obtained by symbolic differentiation}
 \end{figure}
+\FloatBarrier
 
 From this data we generate torques and we send $\overline{Y}$ and $\overline{\tau}$ with the estimated signs to the PBPR algorithm. This is what we obtain:
 
@@ -447,11 +475,24 @@ $I_{3zz}$ & 0.0025 & 0\\
 \end{table}
 \FloatBarrier
 
+The estimated dynamic coefficients are:
+
+\[\hat{\pi}_1 = 0.0275\]
+\[\hat{\pi}_2  = 0.0599\]
+\[\hat{\pi}_3 = 0.0148\]
+\[\hat{\pi}_4 = 0.0227\]
+\[\hat{\pi}_5 = 0.0905\]
+\[\hat{\pi}_6 = 0.0148\]
+\[\hat{\pi}_7 = 0.0351\]
+\[\hat{\pi}_8 = 0.0068\]
+\[\hat{\pi}_9 = 3.8295\]
+\[\hat{\pi}_{10} = 0.7431\]
+
 We do not obtain the exactly same values of the dynamic coefficients; however, we obtain a quite small error: 0.0594.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/results1.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/results1.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
@@ -462,7 +503,7 @@ As we can notice from the plot, the algorithm fails in predicting one sign in th
 The second trajectory generated is:
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/trajectory456.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/trajectory456.eps}
 \caption{Plot of position, velocity and acceleration for each joint; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -500,11 +541,24 @@ $I_{3zz}$ & 0.0025 & 0.0014\\
 \end{table}
 \FloatBarrier
 
+The estimated dynamic coefficients are:
+
+\[\hat{\pi}_1 = 0.0363\]
+\[\hat{\pi}_2  = 0.1010\]
+\[\hat{\pi}_3 = 0.0099\]
+\[\hat{\pi}_4 = 0.0225\]
+\[\hat{\pi}_5 = 0.1116\]
+\[\hat{\pi}_6 = 0.0102\]
+\[\hat{\pi}_7 = 0.0456\]
+\[\hat{\pi}_8 = 0.0068\]
+\[\hat{\pi}_9 = 3.8627\]
+\[\hat{\pi}_{10} = 0.7358\]
+
 In this case, the dynamic coefficients retrieved are almost equal to the ground ones, in fact the error we obtain is  $3.3696\cdot10^{-5}$.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/results2.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/results2.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
@@ -515,7 +569,7 @@ From this figure we can see that the algorithm never fails in predicting torque 
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/validation_trajectory.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/validation_trajectory.eps}
 \caption{Plot of position, velocity and acceleration for each joint; the last two are obtained by symbolic differentiation}
 \end{figure}
 \FloatBarrier
@@ -524,7 +578,7 @@ The predicted torques are:
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/3-dof/validation.png}
+\includegraphics[width=0.7\textwidth]{images/3-dof/validation.eps}
 \caption{Plot of the nominal torque vs validation torque for each link; the error is computed as nominal torque - validation torque}
 \end{figure}
 \FloatBarrier
@@ -533,7 +587,7 @@ The predicted torques are:
 \section{7R robot: Franka Emika Panda}
 At this stage we tried to apply our algorithm to a real robot: the Franka Emika Panda.\\
 Choosing this particular robot we could re-use all data collected during the experimentation of the paper \emph{Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization} (Gaz, Cognetti, Oliva, Giordano, De Luca). In fact in the paper repository (\href{https://github.com/marcocognetti/FrankaEmikaPandaDynModel}{\textcolor{red}{link to repo}}) there are stored some useful information used in the work, such as the regressor matrix $Y$ and the torque vector $\tau$.\\\\
-As before, we proceded by taking the absolute value of the torque, so to pretend that we didn't have this kind of information. At this stage we could apply our tree algorithm to estimate the signs.\\
+As before, we proceeded by taking the absolute value of the torque, so to pretend that we didn't have this kind of information. At this stage we could apply our tree algorithm to estimate the signs.\\
 By doing so, we faced a big problem: in fact, when the robot increases its complexity, the tree algorithm becomes tremendously slow and it takes days and weeks to finish its execution.\\\\
 Being unable to use the algorithm as it is, we tried to relax some constraint while solving the optimization problems of the tree. By ignoring the constraints that ensure us physically consistent parameters we can re-write the optimization problem in the following form:
 \[\begin{cases}\min_{p_k}{\phi(p_k)} = \lVert \overline{Y}\pi(p_k)-\overline{\tau} \rVert^2 + \xi_k \gamma(p_k)\\s.t. \qquad LB\le p_k \le UB\end{cases} \Rightarrow \quad min_{a}{\phi(a)} = \lVert \overline{Y}a-\overline{\tau} \rVert^2\]
@@ -552,7 +606,7 @@ In the following plot the results of this modified algorithm on the Franka Emika
 \end{figure}
 \FloatBarrier
 
-We can see that the algorithm has bees able to correctly identify 105 segment signs out of 105.\\
+We can see that the algorithm has been able to correctly identify 105 segment signs out of 105.\\
 The norm of the difference between the retrieved coefficients and the ones estimated with the classical approach (if one has the sign information) is 0.3980.
 
 \section{V-REP}
