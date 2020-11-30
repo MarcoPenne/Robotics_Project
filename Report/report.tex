@@ -13,7 +13,6 @@
 \usepackage{subcaption}
 \usepackage{bm}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{longtable}
 
 \definecolor{myred}{RGB}{143, 42, 12}
 \definecolor{myblue}{RGB}{58, 83, 197}
@@ -650,7 +649,7 @@ The predicted torques are:
 \pagebreak
 \section{7R robot: Franka Emika Panda}
 At this stage we tried to apply our algorithm to a real robot: the Franka Emika Panda.\\
-Choosing this particular robot we could re-use all data collected during the experimentation of the paper \emph{Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization} (Gaz, Cognetti, Oliva, Giordano, De Luca). In fact in the paper repository (\href{https://github.com/marcocognetti/FrankaEmikaPandaDynModel}{\textcolor{red}{link to repo}}) there are stored some useful information used in the work, such as the regressor matrix $Y$ and the torque vector $\tau$.\\\\
+Choosing this particular robot we could re-use all data collected during the experimentation of the paper \emph{Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization} (Gaz, Cognetti, Oliva, Giordano, De Luca). In fact in the paper repository (\href{https://github.com/marcocognetti/FrankaEmikaPandaDynModel}{\textcolor{red}{link to repo}}) there are stored some useful information used in the work, such as the regressor matrix $Y$ and the torque vector $\tau$. The dynamic model we used takes into account also the presence of friction.\\\\
 As before, we proceeded by taking the absolute value of the torque, so to pretend that we didn't have this kind of information. At this stage we could apply our tree algorithm to estimate the signs.\\
 By doing so, we faced a big problem: in fact, when the robot increases its complexity, the tree algorithm becomes tremendously slow and it takes days and weeks to finish its execution.\\\\
 Being unable to use the algorithm as it is, we tried to relax some constraint while solving the optimization problems of the tree. By ignoring the constraints that ensure us physically consistent parameters we can re-write the optimization problem in the following form:
@@ -670,8 +669,126 @@ In the following plot the results of this modified algorithm on the Franka Emika
 \end{figure}
 \FloatBarrier
 
-We can see that the algorithm has been able to correctly identify 105 segment signs out of 105.\\
-The norm of the difference between the retrieved coefficients and the ones estimated with the classical approach (if one has the sign information) is 0.3980.
+We can see that the algorithm has been able to correctly identify 105 segment signs out of 105.
+
+\clearpage
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|cc|}
+\hline
+& $\hat{p}_{RA-L}$ & $\hat{p}$\\ 
+\hline
+$ m_1 $ & 7.6142 & 4.970684\\
+$ m_2 $ & 1.5637 & 0.646926\\
+$ m_3 $ & 1.0882 & 3.228604\\
+$ m_4 $ & 2.1191 & 3.587895\\
+$ m_5 $ & 3.4463 & 1.225946\\
+$ m_6 $ & 0.9012 & 1.666555\\
+$ m_7 $ & 2.0431 & 7.35522e-01\\
+$ c_{1x} $ & -0.0186 & 3.875e-03\\
+$ c_{1y} $ & -0.0077 & 2.081e-03\\
+$ c_{1z} $ & -0.1851 & *\\
+$ c_{2x} $ & -0.0086 & -3.141e-03\\
+$ c_{2y} $ & -0.0999 & -2.872e-02\\
+$ c_{2z} $ & -0.0227 & 3.495e-03\\
+$ c_{3x} $ & 0.0005 & 2.7518e-02\\
+$ c_{3y} $ & 0.0481 & 3.9252e-02\\
+$ c_{3z} $ & -0.0608 & -6.6502e-02\\
+$ c_{4x} $ & 0.0288 & -5.317e-02\\
+$ c_{4y} $ & 0.0744 & 1.04419e-01\\
+$ c_{4z} $ & 0.0307 & 2.7454e-02\\
+$ c_{5x} $ & -0.0033 & -1.1953e-02\\
+$ c_{5y} $ & 0.0368 & 4.1065e-02\\
+$ c_{5z} $ & -0.2563 & -3.8437e-02\\
+$ c_{6x} $ & -0.0205 & 6.0149e-02\\
+$ c_{6y} $ & 0.0476 & -1.4117e-02\\
+$ c_{6z} $ & 0.0486 & -1.0517e-02\\
+$ c_{7x} $ & 0.0026 & 1.0517e-02\\
+$ c_{7y} $ & 0.0038 & -4.252e-03\\
+$ c_{7z} $ & 0.0542 & 6.1597e-02\\
+\hline
+\end{tabular}
+\hspace{1cm}
+\begin{tabular}{|c|cc|}
+\hline
+& $\hat{p}_{RA-L}$ & $\hat{p}$\\ 
+\hline
+$ I_{1xx} $ & 0.5091 & 7.0337e-01\\
+$ I_{1xy} $ & -0.0008 & -1.3900e-04\\
+$ I_{1xz} $ & 0.0005 & 6.7720e-03\\
+$ I_{1yy} $ & 0.5086 & 7.0661e-01\\
+$ I_{1yz} $ & 0.0004 & 1.9169e-02\\
+$ I_{1zz} $ & 0.0017 & 9.1170e-03\\
+$ I_{2xx} $ & 0.0080 & 7.9620e-03\\
+$ I_{2xy} $ & 0.0023 & -3.9250e-03\\
+$ I_{2xz} $ & -0.0191 & 1.0254e-02\\
+$ I_{2yy} $ & 0.0019 & 2.8110e-02\\
+$ I_{2yz} $ & -0.0173 & 7.0400e-04\\
+$ I_{2zz} $ & 0.0019 & 2.5995e-02\\
+$ I_{3xx} $ & 0.0015 & 3.7242e-02\\
+$ I_{3xy} $ & 0.0011 & -4.7610e-03\\
+$ I_{3xz} $ & -0.0013 & -1.1396e-02\\
+$ I_{3yy} $ & 0.0000 & 3.6155e-02\\
+$ I_{3yz} $ & -0.0123 & -1.2805e-02\\
+$ I_{3zz} $ & 0.0003 & 1.0830e-02\\
+$ I_{4xx} $ & 0.0629 & 2.5853e-02\\
+$ I_{4xy} $ & -0.0009 & 7.7960e-03\\
+$ I_{4xz} $ & 0.0086 & -1.3320e-03\\
+$ I_{4yy} $ & 0.0010 & 1.9552e-02\\
+$ I_{4yz} $ & 0.0046 & 8.6410e-03\\
+$ I_{4zz} $ & 0.0482 & 2.8323e-02\\
+$ I_{5xx} $ & 0.0018 & 3.5549e-02\\
+$ I_{5xy} $ & 0.0083 & -2.1170e-03\\
+$ I_{5xz} $ & -0.0099 & -4.0370e-03\\
+$ I_{5yy} $ & 0.0121 & 2.9474e-02\\
+$ I_{5yz} $ & -0.0251 & 2.2900e-04\\
+$ I_{5zz} $ & 0.0002 & 8.6270e-03\\
+$ I_{6xx} $ & 0.0005 & 1.9640e-03\\
+$ I_{6xy} $ & -0.0118 & 1.0900e-04\\
+$ I_{6xz} $ & -0.0021 & -1.1580e-03\\
+$ I_{6yy} $ & 0.0016 & 4.3540e-03\\
+$ I_{6yz} $ & -0.0037 & 3.4100e-04\\
+$ I_{6zz} $ & 0.0006 & 5.4330e-03\\
+$ I_{7xx} $ & 0.0006 & 1.2516e-02\\
+$ I_{7xy} $ & 0.0052 & -4.2800e-04\\
+$ I_{7xz} $ & 0.0018 & -1.1960e-03\\
+$ I_{7yy} $ & 0.0008 & 1.0027e-02\\
+$ I_{7yz} $ & -0.0061 & -7.4100e-04\\
+$ I_{7zz} $ & 0.0009 & 4.8150e-03\\
+\hline
+\end{tabular}
+\hspace{1cm}
+\begin{tabular}{|c|cc|}
+\hline
+& $\hat{p}_{RA-L}$ & $\hat{p}$\\ 
+\hline
+$ fc_1 $ & 0.2120 & 0.2450\\
+$ fc_2 $ & 0.1600 & 0.1523\\
+$ fc_3 $ & 0.1445 & 0.1827\\
+$ fc_4 $ & 0.3734 & 0.3591\\
+$ fc_5 $ & 0.2969 & 0.2669\\
+$ fc_6 $ & 0.1470 & 0.1658\\
+$ fc_7 $ & 0.2459 & 0.2109\\
+$ fv_1 $ & 0.1310 & 0.0665\\
+$ fv_2 $ & 0.1747 & 0.1987\\
+$ fv_3 $ & 0.0641 & 0.0399\\
+$ fv_4 $ & 0.2257 & 0.2257\\
+$ fv_5 $ & 0.0544 & 0.1023\\
+$ fv_6 $ & 0.0025 & -0.0132\\
+$ fv_7 $ & 0.0400 & 0.0638\\
+$ fo_1 $ & -0.1080 & -0.1073\\
+$ fo_2 $ & -0.4674 & -0.1566\\
+$ fo_3 $ & -0.0772 & -0.0686\\
+$ fo_4 $ & -0.0779 & -0.2522\\
+$ fo_5 $ & -0.0290 & 0.0045\\
+$ fo_6 $ & 0.0867 & 0.0910\\
+$ fo_7 $ & -0.0236 & -0.0127\\
+\hline
+\end{tabular}
+\end{center}
+\caption{In this table the dynamic parameters are reported: $\hat{p}_{RA-L}$ are the dynamic parameters identified in the experimentation of the paper; $\hat{p}$ are the dynamic coefficients identified with our approach.}
+\end{table}
 
 \clearpage
 
@@ -760,6 +877,10 @@ $\pi_{64} $  & -0.0127 & -0.0236\\
 \end{table}
 
 \FloatBarrier
+
+The norm of the difference between the retrieved coefficients and the ones estimated with the classical approach (if one has the sign information) is 0.3980.
+
+\clearpage
 
 \section{V-REP}
 In this section we show the V-REP scenes for our two robots.
