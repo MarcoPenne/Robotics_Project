@@ -13,6 +13,7 @@
 \usepackage{subcaption}
 \usepackage{bm}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{longtable}
 
 \definecolor{myred}{RGB}{143, 42, 12}
 \definecolor{myblue}{RGB}{58, 83, 197}
@@ -671,6 +672,94 @@ In the following plot the results of this modified algorithm on the Franka Emika
 
 We can see that the algorithm has been able to correctly identify 105 segment signs out of 105.\\
 The norm of the difference between the retrieved coefficients and the ones estimated with the classical approach (if one has the sign information) is 0.3980.
+
+\clearpage
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|cc|}
+\hline
+& $\hat{\pi}_{CLS}$ & $\pi(\hat{p})$\\ 
+\hline
+$\pi_{1} $  & 0.0204 & 0.0077\\
+$\pi_{2} $  & 0.9188 & 1.0001\\
+$\pi_{3} $  & -0.0033 & 0.0010\\
+$\pi_{4} $  & 0.0042 & -0.0194\\
+$\pi_{5} $  & -0.0155 & -0.0209\\
+$\pi_{6} $  & 0.9346 & 0.9961\\
+$\pi_{7} $  & 0.0149 & -0.0057\\
+$\pi_{8} $  & 0.0127 & 0.0064\\
+$\pi_{9} $  & -0.0061 & -0.0012\\
+$\pi_{10} $  & -0.0138 & -0.0091\\
+$\pi_{11} $  & 0.0825 & 0.1089\\
+$\pi_{12} $  & 0.5462 & 0.5308\\
+$\pi_{13} $  & 0.1202 & 0.1241\\
+$\pi_{14} $  & 0.0040 & 0.0067\\
+$\pi_{15} $  & 0.0078 & -0.0002\\
+$\pi_{16} $  & 0.6196 & 0.6076\\
+$\pi_{17} $  & 0.0114 & 0.0142\\
+$\pi_{18} $  & 0.0036 & 0.0087\\
+$\pi_{19} $  & -0.0102 & -0.0128\\
+$\pi_{20} $  & 0.0080 & 0.0074\\
+$\pi_{21} $  & 0.0216 & 0.0248\\
+$\pi_{22} $  & -0.0157 & -0.0084\\
+$\pi_{23} $  & 0.0014 & -0.0012\\
+$\pi_{24} $  & 0.0047 & -0.0012\\
+$\pi_{25} $  & 0.0006 & -0.0058\\
+$\pi_{26} $  & 0.0145 & 0.0256\\
+$\pi_{27} $  & 0.0024 & -0.0002\\
+$\pi_{28} $  & 0.0049 & 0.0051\\
+$\pi_{29} $  & 0.0023 & 0.0015\\
+$\pi_{30} $  & -0.0027 & -0.0065\\
+$\pi_{31} $  & -0.0043 & 0.0009\\
+$\pi_{32} $  & 0.0288 & -0.0134\\
+
+\hline
+\end{tabular}
+\hspace{1cm}
+\begin{tabular}{|c|cc|}
+\hline
+& $\hat{\pi}_{CLS}$ & $\pi(\hat{p})$\\ 
+\hline
+$\pi_{33} $  & -3.1363 & -3.1230\\
+$\pi_{34} $  & 0.6803 & 0.7026\\
+$\pi_{35} $  & -0.0121 & -0.0128\\
+$\pi_{36} $  & -0.4726 & -0.4661\\
+$\pi_{37} $  & 1.7517 & 1.7282\\
+$\pi_{38} $  & -0.0005 & -0.0114\\
+$\pi_{39} $  & 0.0817 & 0.0830\\
+$\pi_{40} $  & 0.1637 & 0.1613\\
+$\pi_{41} $  & -0.0623 & -0.0678\\
+$\pi_{42} $  & 0.0013 & 0.0054\\
+$\pi_{43} $  & 0.0048 & 0.0078\\
+$\pi_{44} $  & 0.0665 & 0.1310\\
+$\pi_{45} $  & 0.1987 & 0.1747\\
+$\pi_{46} $  & 0.0399 & 0.0641\\
+$\pi_{47} $  & 0.2257 & 0.2257\\
+$\pi_{48} $  & 0.1023 & 0.0544\\
+$\pi_{49} $  & -0.0132 & 0.0025\\
+$\pi_{50} $  & 0.0638 & 0.0400\\
+$\pi_{51} $  & 0.2450 & 0.2120\\
+$\pi_{52} $  & 0.1523 & 0.1600\\
+$\pi_{53} $  & 0.1827 & 0.1445\\
+$\pi_{54} $  & 0.3591 & 0.3734\\
+$\pi_{55} $  & 0.2669 & 0.2969\\
+$\pi_{56} $  & 0.1658 & 0.1470\\
+$\pi_{57} $  & 0.2109 & 0.2459\\
+$\pi_{58} $  & -0.1073 & -0.1080\\
+$\pi_{59} $  & -0.1566 & -0.4674\\
+$\pi_{60} $  & -0.0686 & -0.0772\\
+$\pi_{61} $  & -0.2522 & -0.0779\\
+$\pi_{62} $  & 0.0045 & -0.0290\\
+$\pi_{63} $  & 0.0910 & 0.0867\\
+$\pi_{64} $  & -0.0127 & -0.0236\\
+\hline
+\end{tabular}
+\end{center}
+\caption{In this table the dynamic coefficients are reported: $\hat{\pi}_{CLS}$ are the dynamic coefficients identified using a classical approach; $\pi(\hat{p})$ are the dynamic coefficients identified with the PBPR algorithm.}
+\end{table}
+
+\FloatBarrier
 
 \section{V-REP}
 In this section we show the V-REP scenes for our two robots.
