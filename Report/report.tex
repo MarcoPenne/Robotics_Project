@@ -211,6 +211,8 @@ Even if there is a slightly difference between the ground dynamic parameters and
 \end{figure}
 \FloatBarrier
 
+The value of the threshold chosen by the algorithm is 1.0351 $Nm$.
+
 \paragraph{Experiment 2}Then, we move to a slightly more difficult trajectory, in which the robot starts from $q = 0$, then it goes to the configuration $q = \dfrac{\pi}{4}$, then to $q = -\dfrac{\pi}{4}$ and finally it returns to the initial configuration. Again, we interpolate these points with a cubic spline. With this trajectory, the resulting torques are positive in the first half period and negative in the second one.
 
 \begin{figure}[!htbp]
@@ -261,6 +263,8 @@ In this case, we do not obtain the exactly same values of the dynamic coefficien
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
+
+The value of the threshold chosen by the algorithm is 2.8237 $Nm$.
 
 \paragraph{Experiment 3} In the last experiment for the 1-dof arm, we moved to a more exciting trajectory generated according to this formula:
 \[q_j(t) = \sum_{l=1}^{L}{\frac{ a_{l,j}}{ l\omega_f }\sin(l\omega_f t)-\frac{ b_{l,j}}{l\omega_f}\cos(l\omega_f t)+q_{0,j}}\]
@@ -314,6 +318,8 @@ With this experiment, we obtain almost the same dynamics coefficients; the error
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
 \FloatBarrier
+
+The value of the threshold chosen by the algorithm is 3.1610 $Nm$.
 
 \pagebreak
 
@@ -549,6 +555,23 @@ We do not obtain the exactly same values of the dynamic coefficients; the error 
 \end{figure}
 \FloatBarrier
 
+We report the values of the thresholds chosen by the algorithm for each joint:
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Joint & Threshold ($Nm$)\\ 
+\hline
+1 & 0.0098\\
+2 & 0.2422\\
+3 & 0.1353\\
+\hline
+\end{tabular}
+\end{table}
+\FloatBarrier
+
+
 As we can notice from the plot, the algorithm fails in predicting one sign in the first joint torque; this is why we have a discrepancy between the nominal torque and the reconstructed one. The reason of this error is because the algorithm has selected a threshold which was too low for the real problem, so it cannot recognize the change of sign in that particular section.
 
 \paragraph{Experiment 2}
@@ -626,6 +649,22 @@ In this case, the dynamic coefficients retrieved are almost equal to the ground 
 \end{figure}
 \FloatBarrier
 
+We report the values of the thresholds chosen by the algorithm for each joint:
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Joint & Threshold ($Nm$)\\ 
+\hline
+1 & 0.0220\\
+2 & 0.7475\\
+3 & 0.0317\\
+\hline
+\end{tabular}
+\end{table}
+\FloatBarrier
+
 From this figure we can see that the algorithm never fails in predicting torque signs; this is why the error is smaller than before and the torque reconstruction is better.
 
 \subsection{Validation} \paragraph{} We validate the results obtained in the second experiment (because it is the one with the smaller error) on a new never seen trajectory:
@@ -667,6 +706,26 @@ In the following plot the results of this modified algorithm on the Franka Emika
 \includegraphics[width=1\textwidth]{images/franka_result_crop.eps}
 \caption{Plot of the reconstructed torque vs nominal torque. The gray dashed lines represent the threshold; the green dashed lines represent the start of the segment, while the red dashed lines represent the end of the segment. Samples under threshold are discarded. The signs estimated by the algorithm are reported for each segment.}
 \end{figure}
+\FloatBarrier
+
+We report the values of the thresholds chosen by the algorithm for each joint:
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Joint & Threshold ($Nm$)\\ 
+\hline
+1 & 0.5236\\
+2 & 3.3910\\
+3 & 1.2584\\
+4 & 4.3295\\
+5 & 0.1419\\
+6 & 0.0810\\
+7 & 0.2293\\
+\hline
+\end{tabular}
+\end{table}
 \FloatBarrier
 
 We can see that the algorithm has been able to correctly identify 105 segment signs out of 105.
@@ -925,10 +984,10 @@ We can idenitfy two drawbacks of the proposed algorithm.
 
 \begin{thebibliography}{}
 \bibitem{1}
-C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
+C. Gaz, M. Cognetti, A. Oliva, P. Robuffo Giordano, A. De Luca
 \emph {Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization}
 \bibitem{2}
-C. Gaz, M. Cognetti, A. Oliva, P. R. Giordano, A. De Luca
+C. Gaz, M. Cognetti, A. Oliva, P. Robuffo Giordano, A. De Luca
 \emph {Dynamic Identification of the Franka Emika Panda Robot With Retrieval of Feasible Parameters Using Penalty-Based Optimization – Supplementary material (revised version: October $15^{th}$, 2019)}
 \bibitem{3}
 A. De Luca
