@@ -1,4 +1,4 @@
-# Robotics_Project
+# Dynamic identification of robot dynamics from motor torques w/o signs
 
 In this repository you will find our work about the dynamic identification of a 1R robot and a 3R robot, estimating the dynamic parameters/coefficients by solving an optimization problem.
 
